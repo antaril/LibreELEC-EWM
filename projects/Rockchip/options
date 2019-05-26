@@ -25,6 +25,8 @@
 ################################################################################
 # setup project defaults
 ################################################################################
+  # add OEM Support
+    OEM_SUPPORT=yes
 
   # build and install ALSA Audio support (yes / no)
     ALSA_SUPPORT="yes"

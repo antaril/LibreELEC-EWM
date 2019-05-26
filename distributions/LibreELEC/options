@@ -225,3 +225,63 @@
 # IR remote keymaps supported in default config
   IR_REMOTE_KEYMAPS="rc6_mce xbox_360 xbox_one"
 
+# This will be put in retroarch.cfg as core playlists
+  RA_PLAYLIST_NAMES=""\
+"Atari - 2600.lpl;"\
+"Atari - 5200.lpl;"\
+"Atari - 7800.lpl;"\
+"Atari - Jaguar.lpl;"\
+"Atari - Lynx.lpl;"\
+"Atari - ST.lpl;"\
+"Bandai - WonderSwan Color.lpl;"\
+"Bandai - WonderSwan.lpl;"\
+"Cave Story.lpl;"\
+"ChaiLove.lpl;"\
+"Coleco - ColecoVision.lpl;"\
+"Commodore - 64.lpl;"\
+"DOOM.lpl;"\
+"DOS.lpl;"\
+"FB Alpha - Arcade Games.lpl;"\
+"GCE - Vectrex.lpl;"\
+"Lutro.lpl;"\
+"Magnavox - Odyssey2.lpl;"\
+"MAME.lpl;"\
+"Microsoft - MSX2.lpl;"\
+"Microsoft - MSX.lpl;"\
+"NEC - PC Engine SuperGrafx.lpl;"\
+"NEC - PC Engine - TurboGrafx 16.lpl;"\
+"Nintendo - Famicom Disk System.lpl;"\
+"Nintendo - Game Boy Advance (e-Cards).lpl;"\
+"Nintendo - Game Boy Advance.lpl;"\
+"Nintendo - Game Boy Color.lpl;"\
+"Nintendo - Game Boy.lpl;"\
+"Nintendo - GameCube.lpl;"\
+"Nintendo - Nintendo 64.lpl;"\
+"Nintendo - Nintendo 64DD.lpl;"\
+"Nintendo - Nintendo DS Decrypted.lpl;"\
+"Nintendo - Nintendo DS (Download Play) (BETA).lpl;"\
+"Nintendo - Nintendo DSi Decrypted.lpl;"\
+"Nintendo - Nintendo DSi (DLC).lpl;"\
+"Nintendo - Nintendo 3DS.lpl;"\
+"Nintendo - Nintendo Entertainment System.lpl;"\
+"Nintendo - Satellaview.lpl;"\
+"Nintendo - Super Nintendo Entertainment System.lpl;"\
+"Nintendo - Virtual Boy.lpl;"\
+"Nintendo - Wii.lpl;"\
+"Quake1.lpl;"\
+"ScummVM.lpl;"\
+"Sega - 32X.lpl;"\
+"Sega - Game Gear.lpl;"\
+"Sega - Dreamcast.lpl;"\
+"Sega - NAOMI.lpl;"\
+"Sega - Master System - Mark III.lpl;"\
+"Sega - Mega Drive - Genesis.lpl;"\
+"Sega - PICO.lpl;"\
+"Sega - SG-1000.lpl;"\
+"Sega - Saturn.lpl;"\
+"Sinclair - ZX Spectrum +3.lpl;"\
+"SNK - Neo Geo Pocket Color.lpl;"\
+"SNK - Neo Geo Pocket.lpl;"\
+"Sony - PlayStation Portable.lpl;"\
+"Sony - PlayStation.lpl"
+

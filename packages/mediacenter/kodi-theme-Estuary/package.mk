@@ -14,4 +14,11 @@ PKG_TOOLCHAIN="manual"
 makeinstall_target() {
   mkdir -p $INSTALL/usr/share/kodi/addons/
     cp -a $(get_build_dir kodi)/.$TARGET_NAME/addons/skin.estuary $INSTALL/usr/share/kodi/addons/
+
+#add Netflix & Retroarch shortcuts to menu. Set Live TV to first place and delete Games section for Retroarch
+  if [ ! "$OEM_EMU" = "no" ]; then
+    patch -d $INSTALL/usr/share/kodi/addons/skin.estuary -p1 < $PKG_DIR/files/netflix-retroarch-livetv.patch
+  fi
+
+
 }
