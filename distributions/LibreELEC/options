@@ -8,17 +8,17 @@
   HARDENING_SUPPORT="no"
 
 # Name of the Distro to build (full name, without special characters)
-  DISTRONAME="LibreELEC"
+  DISTRONAME="LibreELEC-EWM"
 
 # short project description
   DESCRIPTION="LibreELEC is a fast and user-friendly Kodi Entertainment Center distribution."
 
 # Welcome Message for e.g. SSH Server (up to 5 Lines)
   GREETING0="##############################################"
-  GREETING1="#                 LibreELEC                  #"
-  GREETING2="#            https://libreelec.tv            #"
-  GREETING3="##############################################"
-  GREETING4=""
+  GREETING1="#             LibreELEC 9.1 EWM              #"
+  GREETING2="#           https://goo.gl/TemeuW            #"
+  GREETING3="#        based on https://libreelec.tv       #"
+  GREETING4="##############################################"
 
 # Root password to integrate in the target system
   ROOT_PASSWORD="libreelec"
@@ -187,6 +187,15 @@
 
 # cron support (yes / no)
   CRON_SUPPORT="yes"
+
+# OEM Apps eg. additional tools like mc or htop (yes / no)
+  OEM_APPS="yes"
+
+# OEM Emulators for Generic & ARM builds (yes / no)
+  OEM_EMU="yes"
+
+# Add non-free packages i.e. fdk-aac (yes / no)
+  NON_FREE_PKG_SUPPORT="no"
 
 # Distribution Specific source location
   DISTRO_MIRROR="http://sources.libreelec.tv/mirror"

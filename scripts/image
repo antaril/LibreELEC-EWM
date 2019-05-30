@@ -66,6 +66,7 @@ if [ "$LIBREELEC_VERSION" = "devel" ]; then
     daily)   LIBREELEC_VERSION=daily-$(date +%Y%j)-$GIT_ABBREV;;
     weekly)  LIBREELEC_VERSION=weekly-$(date +%G%V)-$GIT_ABBREV;;
     monthly) LIBREELEC_VERSION=monthly-$(date +%Y%m)-$GIT_ABBREV;;
+    RR)      LIBREELEC_VERSION=RR-$(date +%Y%m%d)-$GIT_ABBREV;;
     *)       LIBREELEC_VERSION=devel-$(date +%Y%m%d%H%M%S)-$GIT_ABBREV;;
   esac
 fi
@@ -227,7 +228,7 @@ if [ -z "$SQUASHFS_COMPRESSION_OPTION" ]; then
   elif [ "$SQUASHFS_COMPRESSION" = "lzo" ]; then
     SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 9 -b 524288"
   elif [ "$SQUASHFS_COMPRESSION" = "zstd" ]; then
-    SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 22 -b 262144"
+    SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 22 -b 1048576"
   fi
 fi
 
@@ -340,6 +341,10 @@ if [ "$1" = "release" -o "$1" = "mkimage" -o "$1" = "amlpkg" -o "$1" = "noobs" ]
 
   # Cleanup release dir
   rm -rf $RELEASE_DIR
+
+  # clean up target directory
+  rm  $TARGET_IMG/$IMAGE_NAME.kernel
+  rm  $TARGET_IMG/$IMAGE_NAME.system
 
   # Create WeTek Play (Amlogic) ZIP update and auto-install packages if requested
   if [ "$1" = "amlpkg" ]; then
