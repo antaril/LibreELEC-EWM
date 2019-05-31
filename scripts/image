@@ -66,7 +66,6 @@ if [ "$LIBREELEC_VERSION" = "devel" ]; then
     daily)   LIBREELEC_VERSION=daily-$(date +%Y%j)-$GIT_ABBREV;;
     weekly)  LIBREELEC_VERSION=weekly-$(date +%G%V)-$GIT_ABBREV;;
     monthly) LIBREELEC_VERSION=monthly-$(date +%Y%m)-$GIT_ABBREV;;
-    RR)      LIBREELEC_VERSION=RR-$(date +%Y%m%d)-$GIT_ABBREV;;
     *)       LIBREELEC_VERSION=devel-$(date +%Y%m%d%H%M%S)-$GIT_ABBREV;;
   esac
 fi
@@ -228,7 +227,7 @@ if [ -z "$SQUASHFS_COMPRESSION_OPTION" ]; then
   elif [ "$SQUASHFS_COMPRESSION" = "lzo" ]; then
     SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 9 -b 524288"
   elif [ "$SQUASHFS_COMPRESSION" = "zstd" ]; then
-    SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 22 -b 1048576"
+    SQUASHFS_COMPRESSION_OPTION="-Xcompression-level 22 -b 262144"
   fi
 fi
 

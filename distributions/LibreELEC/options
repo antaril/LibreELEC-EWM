@@ -188,14 +188,8 @@
 # cron support (yes / no)
   CRON_SUPPORT="yes"
 
-# OEM Apps eg. additional tools like mc or htop (yes / no)
-  OEM_APPS="yes"
-
 # OEM Emulators for Generic & ARM builds (yes / no)
   OEM_EMU="yes"
-
-# Add non-free packages i.e. fdk-aac (yes / no)
-  NON_FREE_PKG_SUPPORT="no"
 
 # Distribution Specific source location
   DISTRO_MIRROR="http://sources.libreelec.tv/mirror"
