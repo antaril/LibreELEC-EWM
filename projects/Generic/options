@@ -21,17 +21,8 @@
   # u-boot version to use (default)
     UBOOT_VERSION="default"
 
-  # Configuration for u-boot
-    UBOOT_CONFIG=""
-
-  # Target Configfile for u-boot
-    UBOOT_CONFIGFILE=""
-
   # Kernel target
     KERNEL_TARGET="bzImage"
-
-  # Kernel extra targets to build
-    KERNEL_UBOOT_EXTRA_TARGET=""
 
   # Additional kernel make parameters (for example to specify the u-boot loadaddress)
     KERNEL_MAKE_EXTRACMD=""
@@ -52,7 +43,7 @@
     PROJECT_CFLAGS=""
 
   # SquashFS compression method (gzip / lzo / xz / zstd)
-    SQUASHFS_COMPRESSION="gzip"
+    SQUASHFS_COMPRESSION="zstd"
 
 
 ################################################################################
@@ -68,17 +59,11 @@
   # OpenGL-ES implementation to use (no / bcm2835-driver / gpu-viv-bin-mx6q)
     OPENGLES="no"
 
-  # include uvesafb support (yes / no)
-    UVESAFB_SUPPORT="yes"
-
   # Displayserver to use (x11 / no)
     DISPLAYSERVER="x11"
 
   # KODI Player implementation to use (default / bcm2835-driver / libfslvpuwrap)
     KODIPLAYER_DRIVER="default"
-
-  # Modules to install in initramfs for early boot
-    INITRAMFS_MODULES=""
 
   # additional Firmware to use (dvb-firmware, misc-firmware, wlan-firmware)
   # Space separated list is supported,
@@ -92,7 +77,7 @@
     ADDITIONAL_DRIVERS="$ADDITIONAL_DRIVERS bcm_sta intel_nuc_led"
 
   # build and install driver addons (yes / no)
-    DRIVER_ADDONS_SUPPORT="yes"
+    DRIVER_ADDONS_SUPPORT="no"
 
   # driver addons to install:
   # for a list of additional drivers see packages/linux-driver-addons
