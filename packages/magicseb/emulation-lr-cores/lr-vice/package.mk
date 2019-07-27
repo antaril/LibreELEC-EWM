@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present 5schatten (https://github.com/5schatten)
 
 PKG_NAME="lr-vice"
-PKG_VERSION="ce4524df3c4e93e25dd97a6586c24c5e40d30c60"
-PKG_SHA256="04e2081f08cb68e0d107e8f7a0e689dd103187c2062374754d2da138393706dc"
+PKG_VERSION="490f5e7b332a95aa91a505c3fc0f40c8f376822c"
+PKG_SHA256="3c8d18a620b947dcabd26288a745820e160c4b31125bf1010ab79effa5358034"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/vice-libretro"
 PKG_URL="https://github.com/libretro/vice-libretro/archive/$PKG_VERSION.tar.gz"
