@@ -1,0 +1,69 @@
+--- a/xml/Home.xml
++++ b/xml/Home.xml
+@@ -876,7 +876,22 @@
+ 							<shadowcolor>text_shadow</shadowcolor>
+ 						</control>
+ 					</itemlayout>
+-					<content>
++					<content><item>
++							<label>$LOCALIZE[19020]</label>
++							<property name="menu_id">$NUMBER[12000]</property>
++							<onclick>ActivateWindow(TVChannels)</onclick>
++							<thumb>icons/sidemenu/livetv.png</thumb>
++							<property name="id">livetv</property>
++							<visible>!Skin.HasSetting(HomeMenuNoTVButton)</visible>
++						</item>
++						<item>
++							<label>Netflix</label>
++							<property name="menu_id">$NUMBER[8000]</property>
++							<onclick>ActivateWindow(10025,&quot;plugin://plugin.video.netflix/&quot;,return)</onclick>
++							<thumb>netflix.png</thumb>
++							<property name="id">addons</property>
++							<visible>!Skin.HasSetting(HomeMenuNoProgramsButton)</visible>
++						</item>
+ 						<item>
+ 							<label>$LOCALIZE[342]</label>
+ 							<onclick condition="Library.HasContent(movies) + Skin.HasSetting(home_no_categories_widget)">ActivateWindow(Videos,videodb://movies/,return)</onclick>
+@@ -922,14 +937,6 @@
+ 							<visible>!Skin.HasSetting(HomeMenuNoMusicVideoButton)</visible>
+ 						</item>
+ 						<item>
+-							<label>$LOCALIZE[19020]</label>
+-							<property name="menu_id">$NUMBER[12000]</property>
+-							<onclick>ActivateWindow(TVChannels)</onclick>
+-							<thumb>icons/sidemenu/livetv.png</thumb>
+-							<property name="id">livetv</property>
+-							<visible>!Skin.HasSetting(HomeMenuNoTVButton)</visible>
+-						</item>
+-						<item>
+ 							<label>$LOCALIZE[19021]</label>
+ 							<property name="menu_id">$NUMBER[13000]</property>
+ 							<onclick>ActivateWindow(RadioChannels)</onclick>
+@@ -938,12 +945,11 @@
+ 							<visible>!Skin.HasSetting(HomeMenuNoRadioButton)</visible>
+ 						</item>
+ 						<item>
+-							<label>$LOCALIZE[15016]</label>
+-							<property name="menu_id">$NUMBER[17000]</property>
+-							<onclick>ActivateWindow(Games)</onclick>
+-							<thumb>icons/sidemenu/games.png</thumb>
+-							<property name="id">games</property>
+-							<visible>System.GetBool(gamesgeneral.enable) + !Skin.HasSetting(HomeMenuNoGamesButton)</visible>
++							<label>Retroarch</label>
++							<onclick>XBMC.RunScript(/usr/bin/frontend-retroarch.py)</onclick>
++							<thumb>retroarch.png</thumb>
++							<property name="id">retroarch</property>
++							<visible>!Skin.HasSetting(HomeMenuNoRetroarchButton)</visible>
+ 						</item>
+ 						<item>
+ 							<label>$LOCALIZE[24001]</label>
+@@ -986,7 +992,8 @@
+ 							<property name="id">weather</property>
+ 							<visible>!Skin.HasSetting(HomeMenuNoWeatherButton)</visible>
+ 						</item>
+-					</content>
++						
++						</content>
+ 				</control>
+ 				<control type="grouplist" id="700">
+ 					<orientation>horizontal</orientation>

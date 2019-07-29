@@ -12,20 +12,20 @@ PKG_PATCH_DIRS="$KODI_VENDOR"
 
 case $KODI_VENDOR in
   raspberrypi)
-    PKG_VERSION="newclock5_18.1-Leia"
-    PKG_SHA256="22a46122a8e6f5a6507baae8e6be6beaf5a4203358478c94da525187b0681b99"
+    PKG_VERSION="newclock5_18.3-Leia"
+    PKG_SHA256="7e7a89a66a1921b0fa32478277d11361b3c7a04aea88784bac668b300b182298"
     PKG_URL="https://github.com/popcornmix/xbmc/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="kodi-$KODI_VENDOR-$PKG_VERSION.tar.gz"
     ;;
   rockchip)
-    PKG_VERSION="rockchip_18.1-Leia"
-    PKG_SHA256="974a3b273462e99eb405ab0c8aafff5890772cfb0088c2d852aea30917528199"
+    PKG_VERSION="rockchip_18.3-Leia-v2"
+    PKG_SHA256="dfce13129aa8381a4e06cd6c0f597c6212f4230184723edf802d06ea20d5509b"
     PKG_URL="https://github.com/kwiboo/xbmc/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="kodi-$KODI_VENDOR-$PKG_VERSION.tar.gz"
     ;;
   *)
-    PKG_VERSION="18.1-Leia"
-    PKG_SHA256="bc1ef0e271d0b6ce2e1be7546ad4f7d330930d7631cc19a9bbc5f75ddc586166"
+    PKG_VERSION="18.3-Leia"
+    PKG_SHA256="4f265901c00f582beb8d6ad96c9c303e5ab82611e828c7121ae822b07c0915cc"
     PKG_URL="https://github.com/xbmc/xbmc/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="kodi-$PKG_VERSION.tar.gz"
     ;;
@@ -202,6 +202,16 @@ configure_package() {
       KODI_PLAYER="-DCORE_PLATFORM_NAME=aml"
     fi
   fi
+
+post_unpack(){
+  if [ ! "$OEM_APPS" = "no" ] && [ "$PROJECT" = "Generic" ]; then
+    cp $PKG_DIR/files/menu-icons/* $PKG_BUILD/addons/skin.estuary/media/
+  fi
+
+  if [ ! "$OEM_EMU" = "no" ]; then
+    cp $PKG_DIR/files/menu-icons/* $PKG_BUILD/addons/skin.estuary/media/
+  fi
+}
 
   KODI_LIBDVD="$KODI_DVDCSS \
                -DLIBDVDNAV_URL=$SOURCES/libdvdnav/libdvdnav-$(get_pkg_version libdvdnav).tar.gz \
