@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pvr.vuplus"
-PKG_VERSION="3.19.0-Leia"
-PKG_SHA256="f642c80855cf5434b8dffbda757ad5eeb12cf554f665b429fc79ef832baf5ecd"
+PKG_VERSION="3.25.0-Leia"
+PKG_SHA256="030d1ed942e0baa651538ce0a07f55a05559a1fc6564d0a90f3fcd48cbc2f75d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

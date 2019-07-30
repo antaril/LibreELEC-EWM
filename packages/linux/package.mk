@@ -6,23 +6,16 @@ PKG_NAME="linux"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.kernel.org"
 PKG_DEPENDS_HOST="ccache:host openssl:host"
-PKG_DEPENDS_TARGET="toolchain cpio:host kmod:host xz:host wireless-regdb keyutils $KERNEL_EXTRA_DEPENDS_TARGET"
+PKG_DEPENDS_TARGET="toolchain linux:host cpio:host kmod:host xz:host wireless-regdb keyutils $KERNEL_EXTRA_DEPENDS_TARGET"
 PKG_DEPENDS_INIT="toolchain"
 PKG_NEED_UNPACK="$LINUX_DEPENDS"
 PKG_LONGDESC="This package contains a precompiled kernel image and the modules."
 PKG_IS_KERNEL_PKG="yes"
+PKG_STAMP="$KERNEL_TARGET $KERNEL_MAKE_EXTRACMD"
 
 PKG_PATCH_DIRS="$LINUX"
 
 case "$LINUX" in
-  amlogic-3.14)
-    PKG_VERSION="6d8fbb4ee61a7779ac57b5961e076f0c63ff8b65"
-    PKG_SHA256="ef05c88779c893f92e92e5315d0e5396f34c32289726c301fae7ffe8c4214227"
-    PKG_URL="https://github.com/LibreELEC/linux-amlogic/archive/$PKG_VERSION.tar.gz"
-    PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET aml-dtbtools:host"
-    PKG_BUILD_PERF="no"
-    ;;
   rockchip-4.4)
     PKG_VERSION="aa8bacf821e5c8ae6dd8cae8d64011c741659945"
     PKG_SHA256="a2760fe89a15aa7be142fd25fb08ebd357c5d855c41f1612cf47c6e89de39bb3"
@@ -30,24 +23,30 @@ case "$LINUX" in
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     ;;
   raspberrypi)
-    PKG_VERSION="709198a03e40bbf035f75772e9162464dc7fc665" # 5.0.2
-    PKG_SHA256="07133de2bf4be2a2926a484ad94bf9ebc72845d0869eae99d266edeb3e83b2c3"
+    PKG_VERSION="1a75b37ead9ee99fee6db5525608755a73a5efba" # 5.2.0
+    PKG_SHA256="16f2650b597c1b6ed787ab9ff3abfb8bc2798a32b68f7401b5391c485838c06b"
+    PKG_URL="https://github.com/raspberrypi/linux/archive/$PKG_VERSION.tar.gz"
+    PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
+    ;;
+  raspberrypi4)
+    PKG_VERSION="82fba36079e471b5fb5f386bb8195ce5be75cfb3" # 5.1.18
+    PKG_SHA256="4ab335edb71cf95505f891e7ab456f6f00731d5690b5fc0dac7a0b0ed141f1ab"
     PKG_URL="https://github.com/raspberrypi/linux/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     ;;
   *)
-    PKG_VERSION="5.0.2"
-    PKG_SHA256="43bfea3a6b24b4e5f63190409a199bee8cb93dbea01c52ad7f017078ebdf7c9b"
+    PKG_VERSION="5.2"
+    PKG_SHA256="54ad66f672e1a831b574f5e704e8a05f1e6180a8245d4bdd811208a6cb0ac1e7"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v5.x/$PKG_NAME-$PKG_VERSION.tar.xz"
     PKG_PATCH_DIRS="default"
     ;;
 esac
 
-PKG_KERNEL_CFG_FILE=$(kernel_config_path)
+PKG_KERNEL_CFG_FILE=$(kernel_config_path) || die
 
-if [ -n "$KERNEL_LINARO_TOOLCHAIN" ]; then
-  PKG_DEPENDS_HOST="$PKG_DEPENDS_HOST gcc-linaro-$KERNEL_LINARO_TOOLCHAIN:host"
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET gcc-linaro-$KERNEL_LINARO_TOOLCHAIN:host"
+if [ -n "$KERNEL_TOOLCHAIN" ]; then
+  PKG_DEPENDS_HOST="$PKG_DEPENDS_HOST gcc-arm-$KERNEL_TOOLCHAIN:host"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET gcc-arm-$KERNEL_TOOLCHAIN:host"
   HEADERS_ARCH=$TARGET_ARCH
 fi
 
@@ -60,16 +59,15 @@ if [ "$TARGET_ARCH" = "x86_64" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET intel-ucode:host kernel-firmware elfutils:host pciutils"
 fi
 
-if [ "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mkbootimg:host"
+if [[ "$KERNEL_TARGET" = uImage* ]]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET u-boot-tools:host"
 fi
 
 post_patch() {
   cp $PKG_KERNEL_CFG_FILE $PKG_BUILD/.config
-  if [ ! "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
-    sed -i -e "s|^CONFIG_INITRAMFS_SOURCE=.*$|CONFIG_INITRAMFS_SOURCE=\"$BUILD/image/initramfs.cpio\"|" $PKG_BUILD/.config
-    sed -i -e '/^CONFIG_INITRAMFS_SOURCE=*./ a CONFIG_INITRAMFS_ROOT_UID=0\nCONFIG_INITRAMFS_ROOT_GID=0' $PKG_BUILD/.config
-  fi
+
+  sed -i -e "s|^CONFIG_INITRAMFS_SOURCE=.*$|CONFIG_INITRAMFS_SOURCE=\"$BUILD/image/initramfs.cpio\"|" $PKG_BUILD/.config
+  sed -i -e '/^CONFIG_INITRAMFS_SOURCE=*./ a CONFIG_INITRAMFS_ROOT_UID=0\nCONFIG_INITRAMFS_ROOT_GID=0' $PKG_BUILD/.config
 
   # set default hostname based on $DISTRONAME
     sed -i -e "s|@DISTRONAME@|$DISTRONAME|g" $PKG_BUILD/.config
@@ -98,14 +96,10 @@ post_patch() {
     sed -i -e "s|^CONFIG_ISCSI_IBFT=.*$|# CONFIG_ISCSI_IBFT is not set|" $PKG_BUILD/.config
   fi
 
-  # install extra dts files
-  for f in $PROJECT_DIR/$PROJECT/config/*-overlay.dts; do
-    [ -f "$f" ] && cp -v $f $PKG_BUILD/arch/$TARGET_KERNEL_ARCH/boot/dts/overlays || true
-  done
-  if [ -n "$DEVICE" ]; then
-    for f in $PROJECT_DIR/$PROJECT/devices/$DEVICE/config/*-overlay.dts; do
-      [ -f "$f" ] && cp -v $f $PKG_BUILD/arch/$TARGET_KERNEL_ARCH/boot/dts/overlays || true
-    done
+  # disable lima/panfrost if libmali is configured
+  if [ "$OPENGLES" = "libmali" ]; then
+    sed -e "s|^CONFIG_DRM_LIMA=.*$|# CONFIG_DRM_LIMA is not set|" -i $PKG_BUILD/.config
+    sed -e "s|^CONFIG_DRM_PANFROST=.*$|# CONFIG_DRM_PANFROST is not set|" -i $PKG_BUILD/.config
   fi
 }
 
@@ -135,6 +129,12 @@ makeinstall_host() {
 }
 
 pre_make_target() {
+  ( cd $ROOT
+    rm -rf $BUILD/initramfs
+    $SCRIPTS/install initramfs
+  )
+  pkg_lock_status "ACTIVE" "linux:target" "build"
+
   if [ "$TARGET_ARCH" = "x86_64" ]; then
     # copy some extra firmware to linux tree
     mkdir -p $PKG_BUILD/external-firmware
@@ -155,10 +155,17 @@ pre_make_target() {
 }
 
 make_target() {
-  kernel_make modules
-  kernel_make INSTALL_MOD_PATH=$INSTALL/$(get_kernel_overlay_dir) modules_install
-  rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/build
-  rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/source
+  # arm64 target does not support creating uImage.
+  # Build Image first, then wrap it using u-boot's mkimage.
+  if [[ "$TARGET_KERNEL_ARCH" = "arm64" && "$KERNEL_TARGET" = uImage* ]]; then
+    if [ -z "$KERNEL_UIMAGE_LOADADDR" -o -z "$KERNEL_UIMAGE_ENTRYADDR" ]; then
+      die "ERROR: KERNEL_UIMAGE_LOADADDR and KERNEL_UIMAGE_ENTRYADDR have to be set to build uImage - aborting"
+    fi
+    KERNEL_UIMAGE_TARGET="$KERNEL_TARGET"
+    KERNEL_TARGET="${KERNEL_TARGET/uImage/Image}"
+  fi
+
+  kernel_make $KERNEL_TARGET $KERNEL_MAKE_EXTRACMD modules
 
   if [ "$PKG_BUILD_PERF" = "yes" ] ; then
     ( cd tools/perf
@@ -185,8 +192,6 @@ make_target() {
       NO_LIBAUDIT=1 \
       NO_LZMA=1 \
       NO_SDT=1 \
-      LDFLAGS="$LDFLAGS -ldw -ldwfl -lebl -lelf -ldl -lz" \
-      EXTRA_PERFLIBS="-lebl" \
       CROSS_COMPILE="$TARGET_PREFIX" \
       JOBS="$CONCURRENCY_MAKE_LEVEL" \
         make $PERF_BUILD_ARGS
@@ -195,56 +200,48 @@ make_target() {
     )
   fi
 
-  ( cd $ROOT
-    rm -rf $BUILD/initramfs
-    $SCRIPTS/install initramfs
-  )
+  if [ -n "$KERNEL_UIMAGE_TARGET" ] ; then
+    # determine compression used for kernel image
+    KERNEL_UIMAGE_COMP=${KERNEL_UIMAGE_TARGET:7}
+    KERNEL_UIMAGE_COMP=$(echo ${KERNEL_UIMAGE_COMP:-none} | sed 's/gz/gzip/; s/bz2/bzip2/')
 
-  if [ "$BOOTLOADER" = "u-boot" -a -n "$KERNEL_UBOOT_EXTRA_TARGET" ]; then
-    for extra_target in "$KERNEL_UBOOT_EXTRA_TARGET"; do
-      kernel_make $extra_target
-    done
-  fi
-
-  # the modules target is required to get a proper Module.symvers
-  # file with symbols from built-in and external modules.
-  # Without that it'll contain only the symbols from the kernel
-  kernel_make $KERNEL_TARGET $KERNEL_MAKE_EXTRACMD modules
-
-  if [ "$BUILD_ANDROID_BOOTIMG" = "yes" ]; then
-    DTB_BLOBS=($(ls arch/$TARGET_KERNEL_ARCH/boot/dts/amlogic/*.dtb 2>/dev/null || true))
-    DTB_BLOBS_COUNT="${#DTB_BLOBS[@]}"
-    DTB_BLOB_OUTPUT="arch/$TARGET_KERNEL_ARCH/boot/dtb.img"
-    ANDROID_BOOTIMG_SECOND="--second $DTB_BLOB_OUTPUT"
-
-    if [ "$DTB_BLOBS_COUNT" -gt 1 ]; then
-      $TOOLCHAIN/bin/dtbTool -o arch/$TARGET_KERNEL_ARCH/boot/dtb.img -p scripts/dtc/ arch/$TARGET_KERNEL_ARCH/boot/dts/amlogic/
-    elif [ "$DTB_BLOBS_COUNT" -eq 1 ]; then
-      cp -PR $DTB_BLOBS $DTB_BLOB_OUTPUT
+    # calculate new load address to make kernel Image unpack to memory area after compressed image
+    if [ "$KERNEL_UIMAGE_COMP" != "none" ] ; then
+      COMPRESSED_SIZE=$(stat -t "arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET" | awk '{print $2}')
+      # align to 1 MiB
+      COMPRESSED_SIZE=$(( (($COMPRESSED_SIZE - 1 >> 20) + 1) << 20 ))
+      PKG_KERNEL_UIMAGE_LOADADDR=$(printf '%X' "$(( $KERNEL_UIMAGE_LOADADDR + $COMPRESSED_SIZE ))")
+      PKG_KERNEL_UIMAGE_ENTRYADDR=$(printf '%X' "$(( $KERNEL_UIMAGE_ENTRYADDR + $COMPRESSED_SIZE ))")
     else
-      ANDROID_BOOTIMG_SECOND=""
+      PKG_KERNEL_UIMAGE_LOADADDR=${KERNEL_UIMAGE_LOADADDR}
+      PKG_KERNEL_UIMAGE_ENTRYADDR=${KERNEL_UIMAGE_ENTRYADDR}
     fi
 
-    LDFLAGS="" mkbootimg --kernel arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET --ramdisk $BUILD/image/initramfs.cpio \
-      $ANDROID_BOOTIMG_SECOND $ANDROID_BOOTIMG_OPTIONS --output arch/$TARGET_KERNEL_ARCH/boot/boot.img
+    mkimage -A $TARGET_KERNEL_ARCH \
+            -O linux \
+            -T kernel \
+            -C $KERNEL_UIMAGE_COMP \
+            -a $PKG_KERNEL_UIMAGE_LOADADDR \
+            -e $PKG_KERNEL_UIMAGE_ENTRYADDR \
+            -d arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET \
+               arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_UIMAGE_TARGET
 
-    mv -f arch/$TARGET_KERNEL_ARCH/boot/boot.img arch/$TARGET_KERNEL_ARCH/boot/$KERNEL_TARGET
-
+    KERNEL_TARGET="${KERNEL_UIMAGE_TARGET}"
   fi
 }
 
 makeinstall_target() {
+  kernel_make INSTALL_MOD_PATH=$INSTALL/$(get_kernel_overlay_dir) modules_install
+  rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/build
+  rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/source
+
   if [ "$BOOTLOADER" = "u-boot" ]; then
     mkdir -p $INSTALL/usr/share/bootloader
-    if [ -d arch/$TARGET_KERNEL_ARCH/boot/dts/amlogic -a -f arch/$TARGET_KERNEL_ARCH/boot/dtb.img ]; then
-      cp arch/$TARGET_KERNEL_ARCH/boot/dtb.img $INSTALL/usr/share/bootloader/dtb.img 2>/dev/null || :
-    else
-      for dtb in arch/$TARGET_KERNEL_ARCH/boot/dts/*.dtb arch/$TARGET_KERNEL_ARCH/boot/dts/*/*.dtb; do
-        if [ -f $dtb ]; then
-          cp -v $dtb $INSTALL/usr/share/bootloader
-        fi
-      done
-    fi
+    for dtb in arch/$TARGET_KERNEL_ARCH/boot/dts/*.dtb arch/$TARGET_KERNEL_ARCH/boot/dts/*/*.dtb; do
+      if [ -f $dtb ]; then
+        cp -v $dtb $INSTALL/usr/share/bootloader
+      fi
+    done
   elif [ "$BOOTLOADER" = "bcm2835-bootloader" ]; then
     mkdir -p $INSTALL/usr/share/bootloader/overlays
 
@@ -258,31 +255,6 @@ makeinstall_target() {
       cp $dtb $INSTALL/usr/share/bootloader/overlays 2>/dev/null || :
     done
     cp -p arch/$TARGET_KERNEL_ARCH/boot/dts/overlays/README $INSTALL/usr/share/bootloader/overlays
-  fi
-}
-
-make_init() {
- : # reuse make_target()
-}
-
-makeinstall_init() {
-  if [ -n "$INITRAMFS_MODULES" ]; then
-    mkdir -p $INSTALL/etc
-    mkdir -p $INSTALL/usr/lib/modules
-
-    for i in $INITRAMFS_MODULES; do
-      module=`find .install_pkg/$(get_full_module_dir)/kernel -name $i.ko`
-      if [ -n "$module" ]; then
-        echo $i >> $INSTALL/etc/modules
-        cp $module $INSTALL/usr/lib/modules/`basename $module`
-      fi
-    done
-  fi
-
-  if [ "$UVESAFB_SUPPORT" = yes ]; then
-    mkdir -p $INSTALL/usr/lib/modules
-      uvesafb=`find .install_pkg/$(get_full_module_dir)/kernel -name uvesafb.ko`
-      cp $uvesafb $INSTALL/usr/lib/modules/`basename $uvesafb`
   fi
 }
 

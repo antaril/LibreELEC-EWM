@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present 5schatten (https://github.com/5schatten)
 
 PKG_NAME="lr-mupen64plus"
-PKG_VERSION="374f8bb31ce8e54c815cf5b38dc645ff6d8637cb"
-PKG_SHA256="3e4cad400d93e021bd8f37cb97f0c296886a2426709ba8385a3f661631f77843"
+PKG_VERSION="ab8134ac90a567581df6de4fc427dd67bfad1b17"
+PKG_SHA256="98e197cdcac64c0e08eda91a6d63b637c3f151066bede25766e62bc1a59552a0"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/mupen64plus-libretro"
 PKG_URL="https://github.com/libretro/mupen64plus-libretro/archive/$PKG_VERSION.tar.gz"
@@ -31,6 +31,10 @@ configure_package() {
   if [ "${OPENGLES_SUPPORT}" = "yes" ]; then
     PKG_DEPENDS_TARGET+=" ${OPENGLES}"
   fi
+  
+  if [ "${DEVICE}" = "RPi4" ]; then
+    PKG_DEPENDS_TARGET+=" libX11"
+  fi
 }
 
 pre_configure_target() {
@@ -38,6 +42,7 @@ pre_configure_target() {
   if [ "${OPENGLES_SUPPORT}" = "yes" ]; then
     PKG_MAKE_OPTS_TARGET+=" FORCE_GLES=1"
   fi
+ 
 
   if [ "$PROJECT" = "RPi" ]; then
     case $DEVICE in
@@ -53,7 +58,18 @@ pre_configure_target() {
                         -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
 
         ;;
+     RPi3)
+        PKG_MAKE_OPTS_TARGET+=" platform=rpi3"
+        CFLAGS="$CFLAGS -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads \
+                        -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
+
+        ;;
+    RPi4)
+        PKG_MAKE_OPTS_TARGET+="  FORCE_GLES=0 FORCE_GLES3=1"
+
+        ;;
     esac
+
   else
     # Dynarec
     if [ "${ARCH}" = "arm" ]; then

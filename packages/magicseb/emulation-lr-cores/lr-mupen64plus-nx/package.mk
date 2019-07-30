@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present 5schatten (https://github.com/5schatten)
 
 PKG_NAME="lr-mupen64plus-nx"
-PKG_VERSION="cdf7bb989cf412341eb40df77da0bcd42309f737"
-PKG_SHA256="458da6a5646282db47d9798cfc36165f451f5ab8de19d5d01c12649b895c4f7e"
+PKG_VERSION="8cc06b19f0e105e8d5691d16b6b13216c382c720"
+PKG_SHA256="517941aeaf002d4d61e8d8b29a3cff745ee1f302d8f52f92163879f082ebdfb4"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/mupen64plus-libretro-nx"
 PKG_URL="https://github.com/libretro/mupen64plus-libretro-nx/archive/$PKG_VERSION.tar.gz"
@@ -31,6 +31,10 @@ configure_package() {
   if [ "${OPENGLES_SUPPORT}" = "yes" ]; then
     PKG_DEPENDS_TARGET+=" ${OPENGLES}"
   fi
+
+  if [ "${DEVICE}" = "RPi4" ]; then
+    PKG_DEPENDS_TARGET+=" libX11"
+  fi
 }
 
 pre_configure_target() {
@@ -51,6 +55,16 @@ pre_configure_target() {
         PKG_MAKE_OPTS_TARGET+=" platform=rpi2"
         CFLAGS="$CFLAGS -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads \
                         -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
+
+        ;;
+     RPi3)
+        PKG_MAKE_OPTS_TARGET+=" platform=rpi3"
+        CFLAGS="$CFLAGS -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads \
+                        -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
+
+        ;;
+     RPi4)
+        PKG_MAKE_OPTS_TARGET+=" platform=unix GLES3=1 FORCE_GLES3=1 HAVE_NEON=1 WITH_DYNAREC=arm"
 
         ;;
     esac

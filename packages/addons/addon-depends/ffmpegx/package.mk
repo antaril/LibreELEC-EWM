@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="ffmpegx"
-PKG_VERSION="4.1"
-PKG_SHA256="7afb163d6974693cdad742aa1224c33683c50845c67ee5ae35506efc631ac121"
+PKG_VERSION="4.1.3"
+PKG_SHA256="271405b43f4953fcf0487c66bc455cf94bb7a10ffcb27f72a402463b87b2b8c9"
 PKG_LICENSE="LGPLv2.1+"
 PKG_SITE="https://ffmpeg.org"
 PKG_URL="https://github.com/FFmpeg/FFmpeg/archive/n${PKG_VERSION}.tar.gz"
@@ -14,12 +14,12 @@ PKG_BUILD_FLAGS="-gold"
 # Dependencies
 get_graphicdrivers
 
-if [ "$KODIPLAYER_DRIVER" == "bcm2835-driver" ]; then
+if [ "$KODIPLAYER_DRIVER" = "bcm2835-driver" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET bcm2835-driver"
 fi
 
 if [ "$TARGET_ARCH" = "x86_64" ]; then
-  PKG_DEPENDS_TARGET+=" nasm:host x265"
+  PKG_DEPENDS_TARGET+=" nasm:host intel-vaapi-driver x265"
 fi
 
 if [[ ! $TARGET_ARCH = arm ]] || target_has_feature neon; then
@@ -34,21 +34,16 @@ fi
 pre_configure_target() {
   cd $PKG_BUILD
   rm -rf .$TARGET_NAME
-  
-  # pass gnutls to build
-  PKG_CONFIG_PATH="$(get_build_dir gnutls)/.INSTALL_PKG/usr/lib/pkgconfig"
-  CFLAGS="$CFLAGS -I$(get_build_dir gnutls)/.INSTALL_PKG/usr/include"
-  LDFLAGS="$LDFLAGS -L$(get_build_dir gnutls)/.INSTALL_PKG/usr/lib"
 
-  if [ "$KODIPLAYER_DRIVER" == "bcm2835-driver" ]; then
-    CFLAGS="-DRPI=1 -I$SYSROOT_PREFIX/usr/include/IL -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux $CFLAGS"
+  if [ "$KODIPLAYER_DRIVER" = "bcm2835-driver" ]; then
+    CFLAGS="$CFLAGS -DRPI=1 -I$SYSROOT_PREFIX/usr/include/IL"
     PKG_FFMPEG_LIBS="-lbcm_host -ldl -lmmal -lmmal_core -lmmal_util -lvchiq_arm -lvcos -lvcsm"
   fi
 
 # HW encoders
 
   # RPi 0-3
-  if [ "$KODIPLAYER_DRIVER" == "bcm2835-driver" ]; then
+  if [ "$KODIPLAYER_DRIVER" = "bcm2835-driver" ]; then
     PKG_FFMPEG_HW_ENCODERS_RPi="\
     `#Video encoders` \
     --enable-omx-rpi \

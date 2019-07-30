@@ -7,6 +7,8 @@ PKG_LICENSE="GPL"
 PKG_SITE="http://www.kodi.tv"
 PKG_DEPENDS_TARGET="toolchain JsonSchemaBuilder:host TexturePacker:host Python2 zlib systemd lzo pcre swig:host libass curl fontconfig fribidi tinyxml libjpeg-turbo freetype libcdio taglib libxml2 libxslt rapidjson sqlite ffmpeg crossguid giflib libdvdnav libhdhomerun libfmt lirc libfstrcmp flatbuffers:host flatbuffers"
 PKG_LONGDESC="A free and open source cross-platform media player."
+PKG_BUILD_FLAGS="+speed"
+PKG_TOOLCHAIN="cmake-make"
 
 PKG_PATCH_DIRS="$KODI_VENDOR"
 
@@ -52,7 +54,9 @@ configure_package() {
     PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET wayland waylandpp"
     CFLAGS="$CFLAGS -DMESA_EGL_NO_X11_HEADERS"
     CXXFLAGS="$CXXFLAGS -DMESA_EGL_NO_X11_HEADERS"
-    KODI_XORG="-DCORE_PLATFORM_NAME=wayland -DWAYLAND_RENDER_SYSTEM=gles"
+    KODI_XORG="-DCORE_PLATFORM_NAME=wayland \
+               -DWAYLAND_RENDER_SYSTEM=gles \
+               -DWAYLANDPP_PROTOCOLS_DIR=${SYSROOT_PREFIX}/usr/share/waylandpp/protocols"
   fi
 
   if [ ! "$OPENGL" = "no" ]; then
@@ -86,6 +90,10 @@ configure_package() {
     KODI_CEC="-DENABLE_CEC=ON"
   else
     KODI_CEC="-DENABLE_CEC=OFF"
+  fi
+
+  if [ "$CEC_FRAMEWORK_SUPPORT" = "yes" ]; then
+    PKG_PATCH_DIRS+=" cec-framework"
   fi
 
   if [ "$KODI_OPTICAL_SUPPORT" = yes ]; then
@@ -198,8 +206,6 @@ configure_package() {
       KODI_PLAYER="-DCORE_PLATFORM_NAME=gbm -DGBM_RENDER_SYSTEM=gles"
       CFLAGS="$CFLAGS -DMESA_EGL_NO_X11_HEADERS"
       CXXFLAGS="$CXXFLAGS -DMESA_EGL_NO_X11_HEADERS"
-    elif [ "$KODIPLAYER_DRIVER" = libamcodec ]; then
-      KODI_PLAYER="-DCORE_PLATFORM_NAME=aml"
     fi
   fi
 
@@ -301,6 +307,7 @@ post_makeinstall_target() {
     sed -e "s|@OS_VERSION@|$OS_VERSION|g" -i $INSTALL/usr/share/kodi/addons/os.libreelec.tv/addon.xml
     cp -R $PKG_DIR/config/repository.libreelec.tv $INSTALL/usr/share/kodi/addons
     sed -e "s|@ADDON_URL@|$ADDON_URL|g" -i $INSTALL/usr/share/kodi/addons/repository.libreelec.tv/addon.xml
+    sed -e "s|@ADDON_VERSION@|$ADDON_VERSION|g" -i $INSTALL/usr/share/kodi/addons/repository.libreelec.tv/addon.xml
     cp -R $PKG_DIR/config/repository.kodi.game $INSTALL/usr/share/kodi/addons
 
   mkdir -p $INSTALL/usr/share/kodi/config

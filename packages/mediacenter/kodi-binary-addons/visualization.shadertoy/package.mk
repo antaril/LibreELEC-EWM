@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="visualization.shadertoy"
-PKG_VERSION="1.1.9-Leia"
-PKG_SHA256="25b3b1b343350b9eee870d24c7d1ea4634f5499d8548e87fa7589e7119a3ed4d"
+PKG_VERSION="1.1.10-Leia"
+PKG_SHA256="342b89a6d9ec1175023d085f540358b5ddc427bb73e172f155d61e77e87ee56e"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -27,12 +27,3 @@ if [ "$OPENGLES_SUPPORT" = yes ]; then
 # for OpenGL-ES support
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OPENGLES"
 fi
-
-pre_configure_target() {
-  if [ "$KODIPLAYER_DRIVER" = bcm2835-driver ]; then
-    BCM2835_INCLUDES="-I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads/ \
-                      -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux"
-    export CFLAGS="$CFLAGS $BCM2835_INCLUDES"
-    export CXXFLAGS="$CXXFLAGS $BCM2835_INCLUDES"
-  fi
-}

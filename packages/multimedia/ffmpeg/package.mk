@@ -4,12 +4,12 @@
 
 PKG_NAME="ffmpeg"
 # Current branch is: release/4.0-kodi
-PKG_VERSION="4.0.3-Leia-RC5"
-PKG_SHA256="9a971662e44353c120f2ccf87655571998956e699a2dd800ec708b8b928a53c8"
+PKG_VERSION="4.0.3-Leia-18.2"
+PKG_SHA256="68535cc2a000946b62ce4be6edf7dda7900bd524f22bcb826800b94f4a873314"
 PKG_LICENSE="LGPLv2.1+"
 PKG_SITE="https://ffmpeg.org"
 PKG_URL="https://github.com/xbmc/FFmpeg/archive/${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain zlib bzip2 openssl speex"
+PKG_DEPENDS_TARGET="toolchain zlib bzip2 gnutls speex"
 PKG_LONGDESC="FFmpeg is a complete, cross-platform solution to record, convert and stream audio and video."
 PKG_BUILD_FLAGS="-gold"
 
@@ -17,6 +17,7 @@ PKG_BUILD_FLAGS="-gold"
 get_graphicdrivers
 
 if [ "$V4L2_SUPPORT" = "yes" ]; then
+  PKG_PATCH_DIRS+=" v4l2"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libdrm"
   PKG_FFMPEG_V4L2="--enable-v4l2_m2m --enable-libdrm"
 else
@@ -38,10 +39,17 @@ else
 fi
 
 if [ "$PROJECT" = "Rockchip" ]; then
+  PKG_PATCH_DIRS+=" rkmpp"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET rkmpp"
   PKG_FFMPEG_RKMPP="--enable-rkmpp --enable-libdrm --enable-version3"
 else
   PKG_FFMPEG_RKMPP="--disable-rkmpp"
+fi
+
+if [ "$PROJECT" = "Allwinner" ]; then
+  PKG_PATCH_DIRS+=" v4l2-request-api"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libdrm systemd" # systemd is needed for libudev
+  PKG_FFMPEG_V4L2_REQUEST="--enable-v4l2-request --enable-libudev --enable-libdrm"
 fi
 
 if build_with_debug; then
@@ -52,6 +60,7 @@ fi
 
 if [ "$KODIPLAYER_DRIVER" = "bcm2835-driver" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET bcm2835-driver"
+  PKG_PATCH_DIRS+=" rpi-hevc"
 fi
 
 if target_has_feature neon; then
@@ -74,11 +83,8 @@ pre_configure_target() {
   rm -rf .$TARGET_NAME
 
   if [ "$KODIPLAYER_DRIVER" = "bcm2835-driver" ]; then
-    CFLAGS="-I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads -I$SYSROOT_PREFIX/usr/include/interface/vmcs_host/linux $CFLAGS"
     PKG_FFMPEG_LIBS="-lbcm_host -lvcos -lvchiq_arm -lmmal -lmmal_core -lmmal_util -lvcsm"
     PKG_FFMPEG_RPI="--enable-rpi"
-  else
-    PKG_FFMPEG_RPI="--disable-rpi"
   fi
 }
 
@@ -106,7 +112,6 @@ configure_target() {
               --enable-shared \
               --enable-gpl \
               --disable-version3 \
-              --enable-nonfree \
               --enable-logging \
               --disable-doc \
               $PKG_FFMPEG_DEBUG \
@@ -124,7 +129,7 @@ configure_target() {
               --disable-devices \
               --enable-pthreads \
               --enable-network \
-              --disable-gnutls --enable-openssl \
+              --enable-gnutls --disable-openssl \
               --disable-gray \
               --enable-swscale-alpha \
               --disable-small \
@@ -138,6 +143,7 @@ configure_target() {
               $PKG_FFMPEG_VDPAU \
               $PKG_FFMPEG_RPI \
               $PKG_FFMPEG_RKMPP \
+              $PKG_FFMPEG_V4L2_REQUEST \
               --enable-runtime-cpudetect \
               --disable-hardcoded-tables \
               --disable-encoders \
