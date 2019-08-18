@@ -1,6 +1,6 @@
 --- a/xml/Home.xml
 +++ b/xml/Home.xml
-@@ -876,7 +876,22 @@
+@@ -880,7 +880,45 @@
  							<shadowcolor>text_shadow</shadowcolor>
  						</control>
  					</itemlayout>
@@ -21,10 +21,33 @@
 +							<property name="id">addons</property>
 +							<visible>!Skin.HasSetting(HomeMenuNoProgramsButton)</visible>
 +						</item>
++                        <item>
++							<label>$LOCALIZE[3]</label>
++							<onclick>ActivateWindow(Videos,root)</onclick>
++							<property name="menu_id">$NUMBER[11000]</property>
++							<thumb>icons/sidemenu/videos.png</thumb>
++							<property name="id">video</property>
++							<visible>!Skin.HasSetting(HomeMenuNoVideosButton)</visible>
++						</item>						
++						<item>
++							<label>$LOCALIZE[1]</label>
++							<onclick>ActivateWindow(Pictures)</onclick>
++							<property name="menu_id">$NUMBER[4000]</property>
++							<thumb>icons/sidemenu/pictures.png</thumb>
++							<property name="id">pictures</property>
++							<visible>!Skin.HasSetting(HomeMenuNoPicturesButton)</visible>
++						</item>						
++						<item>
++							<label>Retroarch</label>
++							<onclick>XBMC.RunScript(/usr/bin/frontend-retroarch.py)</onclick>
++							<thumb>retroarch.png</thumb>
++							<property name="id">retroarch</property>
++							<visible>!Skin.HasSetting(HomeMenuNoRetroarchButton)</visible>
++						</item>						
  						<item>
  							<label>$LOCALIZE[342]</label>
  							<onclick condition="Library.HasContent(movies) + Skin.HasSetting(home_no_categories_widget)">ActivateWindow(Videos,videodb://movies/,return)</onclick>
-@@ -922,14 +937,6 @@
+@@ -926,14 +964,6 @@
  							<visible>!Skin.HasSetting(HomeMenuNoMusicVideoButton)</visible>
  						</item>
  						<item>
@@ -39,7 +62,7 @@
  							<label>$LOCALIZE[19021]</label>
  							<property name="menu_id">$NUMBER[13000]</property>
  							<onclick>ActivateWindow(RadioChannels)</onclick>
-@@ -938,12 +945,11 @@
+@@ -942,14 +972,6 @@
  							<visible>!Skin.HasSetting(HomeMenuNoRadioButton)</visible>
  						</item>
  						<item>
@@ -49,15 +72,35 @@
 -							<thumb>icons/sidemenu/games.png</thumb>
 -							<property name="id">games</property>
 -							<visible>System.GetBool(gamesgeneral.enable) + !Skin.HasSetting(HomeMenuNoGamesButton)</visible>
-+							<label>Retroarch</label>
-+							<onclick>XBMC.RunScript(/usr/bin/frontend-retroarch.py)</onclick>
-+							<thumb>retroarch.png</thumb>
-+							<property name="id">retroarch</property>
-+							<visible>!Skin.HasSetting(HomeMenuNoRetroarchButton)</visible>
+-						</item>
+-						<item>
+ 							<label>$LOCALIZE[24001]</label>
+ 							<property name="menu_id">$NUMBER[8000]</property>
+ 							<onclick>ActivateWindow(1100)</onclick>
+@@ -958,22 +980,6 @@
+ 							<visible>!Skin.HasSetting(HomeMenuNoProgramsButton)</visible>
  						</item>
  						<item>
- 							<label>$LOCALIZE[24001]</label>
-@@ -986,7 +992,8 @@
+-							<label>$LOCALIZE[1]</label>
+-							<onclick>ActivateWindow(Pictures)</onclick>
+-							<property name="menu_id">$NUMBER[4000]</property>
+-							<thumb>icons/sidemenu/pictures.png</thumb>
+-							<property name="id">pictures</property>
+-							<visible>!Skin.HasSetting(HomeMenuNoPicturesButton)</visible>
+-						</item>
+-						<item>
+-							<label>$LOCALIZE[3]</label>
+-							<onclick>ActivateWindow(Videos,root)</onclick>
+-							<property name="menu_id">$NUMBER[11000]</property>
+-							<thumb>icons/sidemenu/videos.png</thumb>
+-							<property name="id">video</property>
+-							<visible>!Skin.HasSetting(HomeMenuNoVideosButton)</visible>
+-						</item>
+-						<item>
+ 							<label>$LOCALIZE[10134]</label>
+ 							<onclick>ActivateWindow(favourites)</onclick>
+ 							<property name="menu_id">$NUMBER[14000]</property>
+@@ -990,7 +996,8 @@
  							<property name="id">weather</property>
  							<visible>!Skin.HasSetting(HomeMenuNoWeatherButton)</visible>
  						</item>
