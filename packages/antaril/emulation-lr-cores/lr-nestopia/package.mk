@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present 5schatten (https://github.com/5schatten)
 
 PKG_NAME="lr-nestopia"
-PKG_VERSION="44800c5f6336894a8307cc03a38403dbfda83d29"
-PKG_SHA256="ae51ae7731aa1fdcd684b2497148d18250c6b0b043bc36319d9d540db8c24cb7"
+PKG_VERSION="7f48c211c281880d122981da119a4455a9bebbde"
+PKG_SHA256="7aca36ee87a52f9cc18d0e397ccada1cfd732364164e273fc947091026066e97"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/nestopia"
 PKG_URL="https://github.com/libretro/nestopia/archive/$PKG_VERSION.tar.gz"
