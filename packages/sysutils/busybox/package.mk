@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="busybox"
-PKG_VERSION="1.30.0"
-PKG_SHA256="9553da068c0a30b1b8b72479908c1ba58672e2be7b535363a88de5e0f7bc04ce"
+PKG_VERSION="1.31.0"
+PKG_SHA256="0e4925392fd9f3743cc517e031b68b012b24a63b0cf6c1ff03cce7bb3846cc99"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.busybox.net"
 PKG_URL="http://busybox.net/downloads/$PKG_NAME-$PKG_VERSION.tar.bz2"
@@ -126,6 +126,7 @@ makeinstall_target() {
     cp $PKG_DIR/scripts/createlog $INSTALL/usr/bin/
     cp $PKG_DIR/scripts/dtfile $INSTALL/usr/bin
     cp $PKG_DIR/scripts/dtname $INSTALL/usr/bin
+    cp $PKG_DIR/scripts/dtsoc $INSTALL/usr/bin
     cp $PKG_DIR/scripts/lsb_release $INSTALL/usr/bin/
     cp $PKG_DIR/scripts/apt-get $INSTALL/usr/bin/
     cp $PKG_DIR/scripts/sudo $INSTALL/usr/bin/
@@ -137,6 +138,10 @@ makeinstall_target() {
     cp $PKG_DIR/scripts/fs-resize $INSTALL/usr/lib/libreelec
     sed -e "s/@DISTRONAME@/$DISTRONAME/g" \
         -i $INSTALL/usr/lib/libreelec/fs-resize
+
+    if listcontains "${FIRMWARE}" "rpi-eeprom"; then
+      cp $PKG_DIR/scripts/rpi-flash-firmware $INSTALL/usr/lib/libreelec
+    fi
 
   mkdir -p $INSTALL/etc
     cp $PKG_DIR/config/profile $INSTALL/etc
@@ -177,12 +182,11 @@ post_install() {
   add_user nobody x 65534 65534 "Nobody" "/" "/bin/sh"
   add_group nogroup 65534
 
-  enable_service debug-shell.service
   enable_service shell.service
   enable_service show-version.service
   enable_service var.mount
-  enable_service var-log-debug.service
   enable_service fs-resize.service
+  listcontains "${FIRMWARE}" "rpi-eeprom" && enable_service rpi-flash-firmware.service
 
   # cron support
   if [ "$CRON_SUPPORT" = "yes" ] ; then

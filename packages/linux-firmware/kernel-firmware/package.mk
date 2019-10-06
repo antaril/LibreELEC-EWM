@@ -16,11 +16,15 @@ PKG_TOOLCHAIN="manual"
 makeinstall_target() {
   FW_TARGET_DIR=$INSTALL/$(get_full_firmware_dir)
 
-  if find_file_path firmwares/kernel-firmware.dat; then
+  if find_file_path config/kernel-firmware.dat; then
     FW_LISTS="${FOUND_PATH}"
   else
     FW_LISTS="${PKG_DIR}/firmwares/any.dat ${PKG_DIR}/firmwares/${TARGET_ARCH}.dat"
   fi
+
+  FW_LISTS+=" ${PROJECT_DIR}/${PROJECT}/config/kernel-firmware-any.dat ${PROJECT_DIR}/${PROJECT}/config/kernel-firmware-${TARGET_ARCH}.dat"
+
+  FW_LISTS+=" ${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/config/kernel-firmware-any.dat ${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/config/kernel-firmware-${TARGET_ARCH}.dat"
 
   for fwlist in ${FW_LISTS}; do
     [ -f "${fwlist}" ] || continue
@@ -44,10 +48,12 @@ makeinstall_target() {
     done < "${fwlist}"
   done
 
+  PKG_KERNEL_CFG_FILE=$(kernel_config_path) || die
+
   # The following files are RPi specific and installed by brcmfmac_sdio-firmware-rpi instead.
   # They are also not required at all if the kernel is not suitably configured.
   if listcontains "${FIRMWARE}" "brcmfmac_sdio-firmware-rpi" || \
-     ! grep -q "^CONFIG_BRCMFMAC_SDIO=y" $(kernel_config_path); then
+     ! grep -q "^CONFIG_BRCMFMAC_SDIO=y" ${PKG_KERNEL_CFG_FILE}; then
     rm -fr $FW_TARGET_DIR/brcm/brcmfmac43430*-sdio.*
     rm -fr $FW_TARGET_DIR/brcm/brcmfmac43455*-sdio.*
   fi

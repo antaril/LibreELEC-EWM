@@ -3,12 +3,12 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glibc"
-PKG_VERSION="2.29"
-PKG_SHA256="f3eeb8d57e25ca9fc13c2af3dae97754f9f643bc69229546828e3a240e2af04b"
+PKG_VERSION="2.30"
+PKG_SHA256="e2c4114e569afbe7edbc29131a43be833850ab9a459d81beb2588016d2bbb8af"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/libc/"
 PKG_URL="http://ftp.gnu.org/pub/gnu/glibc/$PKG_NAME-$PKG_VERSION.tar.xz"
-PKG_DEPENDS_TARGET="ccache:host autotools:host linux:host gcc:bootstrap"
+PKG_DEPENDS_TARGET="ccache:host autotools:host linux:host gcc:bootstrap pigz:host"
 PKG_DEPENDS_INIT="glibc"
 PKG_LONGDESC="The Glibc package contains the main C library."
 PKG_BUILD_FLAGS="-gold"
@@ -27,7 +27,7 @@ PKG_CONFIGURE_OPTS_TARGET="BASH_SHELL=/bin/sh \
                            --with-__thread \
                            --with-binutils=$BUILD/toolchain/bin \
                            --with-headers=$SYSROOT_PREFIX/usr/include \
-                           --enable-kernel=3.0.0 \
+                           --enable-kernel=4.4.0 \
                            --without-cvs \
                            --without-gd \
                            --disable-build-nscd \
@@ -108,28 +108,28 @@ post_makeinstall_target() {
 # cleanup
 # remove any programs we don't want/need, keeping only those we want
   for f in $(find $INSTALL/usr/bin -type f); do
-    listcontains "${GLIBC_INCLUDE_BIN}" "$(basename "${f}")" || rm -fr "${f}"
+    listcontains "${GLIBC_INCLUDE_BIN}" "$(basename "${f}")" || safe_remove "${f}"
   done
 
-  rm -rf $INSTALL/usr/lib/audit
-  rm -rf $INSTALL/usr/lib/glibc
-  rm -rf $INSTALL/usr/lib/libc_pic
-  rm -rf $INSTALL/usr/lib/*.o
-  rm -rf $INSTALL/usr/lib/*.map
-  rm -rf $INSTALL/var
+  safe_remove $INSTALL/usr/lib/audit
+  safe_remove $INSTALL/usr/lib/glibc
+  safe_remove $INSTALL/usr/lib/libc_pic
+  safe_remove $INSTALL/usr/lib/*.o
+  safe_remove $INSTALL/usr/lib/*.map
+  safe_remove $INSTALL/var
 
 # remove locales and charmaps
-  rm -rf $INSTALL/usr/share/i18n/charmaps
+  safe_remove $INSTALL/usr/share/i18n/charmaps
 
 # add UTF-8 charmap for Generic (charmap is needed for installer)
   if [ "$PROJECT" = "Generic" ]; then
     mkdir -p $INSTALL/usr/share/i18n/charmaps
     cp -PR $PKG_BUILD/localedata/charmaps/UTF-8 $INSTALL/usr/share/i18n/charmaps
-    gzip $INSTALL/usr/share/i18n/charmaps/UTF-8
+    pigz --best --force $INSTALL/usr/share/i18n/charmaps/UTF-8
   fi
 
   if [ ! "$GLIBC_LOCALES" = yes ]; then
-    rm -rf $INSTALL/usr/share/i18n/locales
+    safe_remove $INSTALL/usr/share/i18n/locales
 
     mkdir -p $INSTALL/usr/share/i18n/locales
       cp -PR $PKG_BUILD/localedata/locales/POSIX $INSTALL/usr/share/i18n/locales

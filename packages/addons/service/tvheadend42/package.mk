@@ -85,9 +85,12 @@ pre_configure_target() {
   PKG_CONFIG_PATH="$(get_build_dir ffmpegx)/.INSTALL_PKG/usr/local/lib/pkgconfig"
   CFLAGS+=" -I$(get_build_dir ffmpegx)/.INSTALL_PKG/usr/local/include"
   LDFLAGS+=" -L$(get_build_dir ffmpegx)/.INSTALL_PKG/usr/local/lib"
+<<<<<<< HEAD
 
 # pass gnutls to build
   LDFLAGS="$LDFLAGS -L$(get_build_dir gnutls)/.INSTALL_PKG/usr/lib"
+=======
+>>>>>>> 96737bfb95b16189409ca38d2c962a6dd0674783
 
 # pass libhdhomerun to build
   CFLAGS+=" -I$(get_build_dir libhdhomerun)"
@@ -108,14 +111,6 @@ addon() {
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/bin
 
   cp $PKG_DIR/addon.xml $ADDON_BUILD/$PKG_ADDON_ID
-
-  # copy gnutls lib that is needed for ffmpeg
-  mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_build_dir gnutls)/.INSTALL_PKG/usr/lib/libgnutls.so.30 $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_build_dir nettle)/.install_pkg/usr/lib/libnettle.so.6 $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_build_dir nettle)/.install_pkg/usr/lib/libhogweed.so.4 $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_build_dir libidn2)/.install_pkg/usr/lib/libidn2.so.4 $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_build_dir gmp)/.install_pkg/usr/lib/libgmp.so.10 $ADDON_BUILD/$PKG_ADDON_ID/lib
 
   # set only version (revision will be added by buildsystem)
   sed -e "s|@ADDON_VERSION@|$ADDON_VERSION|g" \

@@ -136,7 +136,7 @@ safe_remove() {
 
   [ -z "${path}" ] && return 0
 
-  if [ -f "${path}" -o -d "${path}" ]; then
+  if [ -e "${path}" -o -L "${path}" ]; then
     rm -r "${path}"
   elif [ -n "${PKG_NAME}" ]; then
     print_color CLR_WARNING "safe_remove: path does not exist: [${PKG_NAME}]: ${path}\n"
@@ -221,6 +221,18 @@ setup_toolchain() {
     TARGET_LDFLAGS+=" $LDFLAGS_OPTIM_GOLD"
   fi
 
+  # compiler optimization, descending priority: speed, size, default
+  if flag_enabled "speed" "no"; then
+    TARGET_CFLAGS+=" $CFLAGS_OPTIM_SPEED"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_SPEED"
+  elif flag_enabled "size" "no"; then
+    TARGET_CFLAGS+=" $CFLAGS_OPTIM_SIZE"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_SIZE"
+  else
+    TARGET_CFLAGS+=" $CXXFLAGS_OPTIM_DEFAULT"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_DEFAULT"
+  fi
+
   # position-independent code
   if flag_enabled "pic" "no"; then
     TARGET_CFLAGS+=" $CFLAGS_OPTIM_PIC"
@@ -242,12 +254,12 @@ setup_toolchain() {
   fi
 
   # parallel
-  if ! flag_enabled "parallel" "yes"; then
-    NINJA_OPTS="$NINJA_OPTS -j1"
-    export MAKEFLAGS="-j1"
-  else
+  if flag_enabled "parallel" "yes"; then
     NINJA_OPTS="$NINJA_OPTS -j$CONCURRENCY_MAKE_LEVEL"
     export MAKEFLAGS="-j$CONCURRENCY_MAKE_LEVEL"
+  else
+    NINJA_OPTS="$NINJA_OPTS -j1"
+    export MAKEFLAGS="-j1"
   fi
 
   # verbose flag
@@ -256,8 +268,47 @@ setup_toolchain() {
     export MAKEFLAGS="$MAKEFLAGS V=1 VERBOSE=1"
   fi
 
-  case "$1" in
-    target|init)
+  case "$1:$2" in
+    target:meson)
+      export DESTIMAGE="target"
+      export AWK="gawk"
+      export CC="$TOOLCHAIN/bin/host-gcc"
+      export CXX="$TOOLCHAIN/bin/host-g++"
+      export CPP="cpp"
+      export LD="ld"
+      export AS="as"
+      export AR="ar"
+      export NM="nm"
+      export RANLIB="ranlib"
+      export OBJCOPY="objcopy"
+      export OBJDUMP="objdump"
+      export STRIP="strip"
+      export CPPFLAGS="$HOST_CPPFLAGS"
+      export CFLAGS="$HOST_CFLAGS"
+      export CXXFLAGS="$HOST_CXXFLAGS"
+      export LDFLAGS="$HOST_LDFLAGS"
+      setup_pkg_config_target
+      export TARGET_CC="${TARGET_PREFIX}gcc"
+      export TARGET_CXX="${TARGET_PREFIX}g++"
+      export TARGET_AR="${TARGET_PREFIX}ar"
+      export TARGET_STRIP="${TARGET_PREFIX}strip"
+      export TARGET_CFLAGS="$TARGET_CFLAGS"
+      export TARGET_CXXFLAGS="$TARGET_CXXFLAGS"
+      export TARGET_LDFLAGS="$TARGET_LDFLAGS"
+      export HOST_CC="$CC"
+      export HOST_CXX="$CXX"
+      export HOSTCC="$CC"
+      export HOSTCXX="$CXX"
+      export CC_FOR_BUILD="$CC"
+      export CXX_FOR_BUILD="$CXX"
+      export BUILD_CC="$CC"
+      export BUILD_CXX="$CXX"
+      export _python_sysroot="$SYSROOT_PREFIX"
+      export _python_prefix=/usr
+      export _python_exec_prefix=/usr
+      ;;
+
+    target:*|init:*)
       export DESTIMAGE="target"
       export CC="${TARGET_PREFIX}gcc"
       export CXX="${TARGET_PREFIX}g++"
@@ -303,7 +354,7 @@ setup_toolchain() {
       export _python_prefix=/usr
       export _python_exec_prefix=/usr
       ;;
-    host|bootstrap)
+    host:*|bootstrap:*)
       export DESTIMAGE="host"
       export AWK="gawk"
       export CC="$TOOLCHAIN/bin/host-gcc"
@@ -354,17 +405,8 @@ setup_toolchain() {
   esac
 }
 
-create_meson_conf() {
-  local endian root properties
-  case "$1" in
-    target|init)    endian="little"
-                    root="$SYSROOT_PREFIX/usr"
-                    ;;
-    host|bootstrap) endian="big"
-                    root="$TOOLCHAIN"
-                    ;;
-  esac
-
+create_meson_conf_host() {
+  local properties
   properties="PKG_MESON_PROPERTIES_${1^^}"
 
   cat > $2 <<EOF
@@ -375,20 +417,54 @@ ar = '$AR'
 strip = '$STRIP'
 pkgconfig = '$PKG_CONFIG'
 llvm-config = '$SYSROOT_PREFIX/usr/bin/llvm-config-host'
+libgcrypt-config = '$SYSROOT_PREFIX/usr/bin/libgcrypt-config'
 
 [host_machine]
 system = 'linux'
 cpu_family = '$TARGET_ARCH'
 cpu = '$TARGET_SUBARCH'
-endian = '$endian'
+endian = 'little'
 
 [properties]
-root = '$root'
+root = '$TOOLCHAIN'
 $(python -c "import os; print('c_args = {}'.format([x for x in os.getenv('CFLAGS').split()]))")
 $(python -c "import os; print('c_link_args = {}'.format([x for x in os.getenv('LDFLAGS').split()]))")
+$(python -c "import os; print('cpp_args = {}'.format([x for x in os.getenv('CXXFLAGS').split()]))")
+$(python -c "import os; print('cpp_link_args = {}'.format([x for x in os.getenv('LDFLAGS').split()]))")
 ${!properties}
 EOF
 }
+
+create_meson_conf_target() {
+  local properties
+  properties="PKG_MESON_PROPERTIES_${1^^}"
+
+  cat > $2 <<EOF
+[binaries]
+c = '$TARGET_CC'
+cpp = '$TARGET_CXX'
+ar = '$TARGET_AR'
+strip = '$TARGET_STRIP'
+pkgconfig = '$PKG_CONFIG'
+llvm-config = '$SYSROOT_PREFIX/usr/bin/llvm-config-host'
+libgcrypt-config = '$SYSROOT_PREFIX/usr/bin/libgcrypt-config'
+
+[host_machine]
+system = 'linux'
+cpu_family = '$TARGET_ARCH'
+cpu = '$TARGET_SUBARCH'
+endian = 'little'
+
+[properties]
+root = '$SYSROOT_PREFIX/usr'
+$(python -c "import os; print('c_args = {}'.format([x for x in os.getenv('TARGET_CFLAGS').split()]))")
+$(python -c "import os; print('c_link_args = {}'.format([x for x in os.getenv('TARGET_LDFLAGS').split()]))")
+$(python -c "import os; print('cpp_args = {}'.format([x for x in os.getenv('TARGET_CXXFLAGS').split()]))")
+$(python -c "import os; print('cpp_link_args = {}'.format([x for x in os.getenv('TARGET_LDFLAGS').split()]))")
+${!properties}
+EOF
+}
+
 
 # unset all PKG_* vars apart from those exported by setup_toolchain, then set default values
 reset_pkg_vars() {
@@ -714,7 +790,7 @@ get_pkg_variable() {
 
 # get package's build dir
 get_build_dir() {
-  local _PKG_NAME="$(get_pkg_variable "$1" PKG_NAME)" _PKG_VERSION="$(get_pkg_version "$1")"
+  local _PKG_NAME="${1%:*}" _PKG_VERSION="$(get_pkg_version "$1")"
   if [ -n "$_PKG_NAME" -a -n "$_PKG_VERSION" ]; then
     echo $BUILD/${_PKG_NAME}-${_PKG_VERSION}
   fi
@@ -989,8 +1065,10 @@ kernel_config_path() {
              $pkg_linux_dir/config/$config_name \
              ; do
     [[ $cfg =~ /devices//linux/ ]] && continue
-    [ -f "$cfg" ] && echo "$cfg" && break
+    [ -f "$cfg" ] && echo "$cfg" && return
   done
+
+  die "ERROR: Unable to locate kernel config for ${LINUX} - looking for ${config_name}"
 }
 
 kernel_make() {
@@ -1155,6 +1233,8 @@ done
 }
 
 install_addon_files() {
+  mkdir -p "$1"
+
   install_addon_source "$1"
   install_addon_images "$1"
   create_addon_xml "$1"
@@ -1190,7 +1270,7 @@ add_user() {
 
   mkdir -p ${INSTALL}/usr/cache
   touch ${INSTALL}/usr/cache/shadow
-  ln -sf /storage/.cache/shadow ${INSTALL}/etc/shadow
+  ln -sf /storage/.cache/shadow ${INSTALL}/etc/shadow 2>/dev/null || true
 
   PASSWORD="$2"
   if [ "$PASSWORD" = "x" ]; then
@@ -1235,6 +1315,8 @@ enable_service() {
 
 
 ### MULTI-THREADED FUNCTION HELPERS ###
+# Test MTWITHLOCKS so that these functions are a no-op during non-multithreaded builds.
+
 # Prevent concurrent modifications to a package (unpack) or
 # package:target (install/build).
 #
@@ -1245,7 +1327,7 @@ pkg_lock() {
 
   local pkg="$1" task="$2" parent_pkg="$3"
   local this_job="${MTJOBID}"
-  local lock_job lock_seq lock_task lock_pkg locked=no
+  local lock_job lock_seq lock_task lock_pkg locked=no idwidth
   local fail_seq
 
   exec 98>"${THREAD_CONTROL}/locks/${pkg}.${task}"
@@ -1256,13 +1338,14 @@ pkg_lock() {
   done
 
   if [ "${locked}" = "no" -a "${lock_job}/${lock_seq}" != "${this_job}/${PARALLEL_SEQ}" ]; then
-    pkg_lock_status "STALLED" "${parent_pkg}" "${task}" "$(printf "waiting on [%02d] %s %s" ${lock_job} "${lock_task}" "${lock_pkg}")"
+    [ "${THREADCOUNT}" = "0" ] && idwidth=${#MTMAXJOBS} || idwidth=2
+    pkg_lock_status "STALLED" "${parent_pkg}" "${task}" "$(printf "waiting on [%0*d] %s %s" ${idwidth} ${lock_job} "${lock_task}" "${lock_pkg}")"
     flock --exclusive 98
   fi
 
   # As we now have the lock, if .failed still exists then a previous process must have failed
   if [ -f "${THREAD_CONTROL}/locks/${pkg}.${task}.failed" ]; then
-    fail_seq="$(cat "${THREAD_CONTROL}/locks/${pkg}.${task}.failed")"
+    fail_seq="$(< "${THREAD_CONTROL}/locks/${pkg}.${task}.failed")"
     print_color CLR_ERROR "FAILURE: ${pkg}.${task}.failed exists, a previous dependency process has failed (seq: ${fail_seq})\n"
     if [ -d "${THREAD_CONTROL}/logs" ]; then
 cat <<EOF
@@ -1284,13 +1367,15 @@ pkg_lock_status() {
   [ "${MTWITHLOCKS}" != "yes" ] && return 0
 
   local status="$1" pkg="$2" task="$3" msg="$4"
-  local this_job="${MTJOBID}" line
+  local this_job="${MTJOBID}" line idwidth
+
+  [ "${THREADCOUNT}" = "0" ] && idwidth=${#MTMAXJOBS} || idwidth=2
 
   (
     flock --exclusive 94
 
-    printf -v line "%s: <%05d> [%02d/%0*d] %-7s %-7s %-35s" \
-    "$(date +%Y-%m-%d\ %H:%M:%S.%N)" $$ ${this_job} ${#MTMAXJOBS} ${PARALLEL_SEQ:-0} "${status}" "${task}" "${pkg}"
+    printf -v line "%s: <%06d> [%0*d/%0*d] %-7s %-7s %-35s" \
+      "$(date +%Y-%m-%d\ %H:%M:%S.%N)" $$ ${idwidth} ${this_job} ${#MTMAXJOBS} ${PARALLEL_SEQ:-0} "${status}" "${task}" "${pkg}"
     [ -n "${msg}" ] && line+=" (${msg})"
 
     echo "${line}" >>"${THREAD_CONTROL}/history"
@@ -1316,19 +1401,25 @@ update_dashboard() {
 
   local status="$1" pkg="$2" task="$3" msg="$4"
   local line sedline preamble num elapsed projdevarch
-  local boldred boldgreen boldyellow endcolor
+  local boldred boldgreen boldyellow endcolor idwidth
 
   sedline=$((MTJOBID + 2))
 
-  num=$(cat "${THREAD_CONTROL}/status" | wc -l)
-  while [ ${num} -lt ${sedline} ]; do echo "" >>"${THREAD_CONTROL}/status"; num=$((num + 1)); done
+  [ "${THREADCOUNT}" = "0" ] && idwidth=${#MTMAXJOBS} || idwidth=2
 
-  num=$(($(cat "${THREAD_CONTROL}/progress.prev") + 1))
+  num=$(< "${THREAD_CONTROL}/status.max")
+  if [ ${num} -lt ${sedline} ]; then
+    echo ${sedline} >"${THREAD_CONTROL}/status.max"
+    for i in $(seq $((num + 1)) ${sedline}); do echo "" >>"${THREAD_CONTROL}/status"; done
+  fi
+
+  num=$(< "${THREAD_CONTROL}/progress.prev")
   projdevarch="${PROJECT}/"
   [ -n "${DEVICE}" ] && projdevarch+="${DEVICE}/"
   projdevarch+="${TARGET_ARCH}"
+  [ -n "${BUILD_SUFFIX}" ] && projdevarch+=", ${BUILD_SUFFIX}"
   TZ=UTC0 printf -v elapsed "%(%H:%M:%S)T" $(($(date +%s) - MTBUILDSTART))
-  printf -v preamble "%s Dashboard (%s) - %d of %d jobs completed, %s elapsed" "${DISTRONAME}" "${projdevarch}" ${num} ${MTMAXJOBS} "${elapsed}"
+  printf -v preamble "%s Dashboard (%s) - %d of %d jobs completed, %s elapsed" "${DISTRONAME}" "${projdevarch}" $((num + 1)) ${MTMAXJOBS} "${elapsed}"
   printf -v preamble "%b%-105s %s" "\e[2J\e[0;0H" "${preamble//\//\\/}" "$(date "+%Y-%m-%d %H:%M:%S")"
 
   if [ "${DISABLE_COLORS}" != "yes" ]; then
@@ -1347,7 +1438,7 @@ update_dashboard() {
     esac
   fi
 
-  printf -v line "[%02d\/%0*d] %b%-7s%b %-7s %-35s" ${MTJOBID} ${#MTMAXJOBS} ${PARALLEL_SEQ:-0} "${color}" "${status//\//\\/}" "${endcolor}" "${task}" "${pkg}"
+  printf -v line "[%0*d\/%0*d] %b%-7s%b %-7s %-35s" ${idwidth} ${MTJOBID} ${#MTMAXJOBS} ${PARALLEL_SEQ:-0} "${color}" "${status//\//\\/}" "${endcolor}" "${task}" "${pkg}"
   [ -n "${msg}" ] && line+=" ${msg//\//\\/}"
 
   sed -e "1s/.*/${preamble}/;${sedline}s/.*/${line}/" -i "${THREAD_CONTROL}/status"
@@ -1355,13 +1446,12 @@ update_dashboard() {
 
 # Thread concurrency helpers to avoid concurrency issues with some code,
 # eg. when Python installs directly into $TOOLCHAIN.
-# Test MTJOBID so that these functions are a no-op during non-multithreaded builds.
 acquire_exclusive_lock() {
   [ "${MTWITHLOCKS}" != "yes" ] && return 0
 
   local pkg="$1" task="$2" lockfile="${3:-global}"
   local this_job="${MTJOBID}"
-  local lock_job lock_seq lock_task lock_pkg locked=no
+  local lock_job lock_seq lock_task lock_pkg locked=no idwidth
 
   exec 96>"${THREAD_CONTROL}/locks/.mutex.${lockfile}"
   while [ : ]; do
@@ -1371,7 +1461,8 @@ acquire_exclusive_lock() {
   done
 
   if [ "${locked}" = "no" -a "${lock_job}/${lock_seq}" != "${this_job}/${PARALLEL_SEQ}" ]; then
-    pkg_lock_status "MUTEX/W" "${pkg}" "${task}" "$(printf "mutex: %s; waiting on [%02d] %s %s" "${lockfile}" ${lock_job} "${lock_task}" "${lock_pkg}")"
+    [ "${THREADCOUNT}" = "0" ] && idwidth=${#MTMAXJOBS} || idwidth=2
+    pkg_lock_status "MUTEX/W" "${pkg}" "${task}" "$(printf "mutex: %s; waiting on [%0*d] %s %s" "${lockfile}" ${idwidth} ${lock_job} "${lock_task}" "${lock_pkg}")"
     flock --exclusive 96
   fi
 

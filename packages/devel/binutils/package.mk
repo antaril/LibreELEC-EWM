@@ -66,10 +66,16 @@ make_target() {
   make configure-host
   make -C libiberty
   make -C bfd
+  make -C opcodes
+  make -C binutils strings
 }
 
 makeinstall_target() {
   mkdir -p $SYSROOT_PREFIX/usr/lib
     cp libiberty/libiberty.a $SYSROOT_PREFIX/usr/lib
   make DESTDIR="$SYSROOT_PREFIX" -C bfd install
+  make DESTDIR="$SYSROOT_PREFIX" -C opcodes install
+
+  mkdir -p ${INSTALL}/usr/bin
+    cp binutils/strings ${INSTALL}/usr/bin
 }

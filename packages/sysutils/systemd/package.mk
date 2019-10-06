@@ -3,12 +3,12 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="systemd"
-PKG_VERSION="239"
-PKG_SHA256="8a11b1b07d620f4c06a16e95bba4dd2a97e90efdf2a5ba47ed0a935085787a14"
+PKG_VERSION="243"
+PKG_SHA256="0611843c2407f8b125b1b7cb93533bdebd4ccf91c99dffa64ec61556a258c7d1"
 PKG_LICENSE="LGPL2.1+"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
 PKG_URL="https://github.com/systemd/systemd/archive/v$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux entropy"
+PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux entropy libidn2"
 PKG_LONGDESC="A system and session manager for Linux, compatible with SysV and LSB init scripts."
 
 PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
@@ -31,17 +31,19 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dlibcryptsetup=false \
                        -Dlibcurl=false \
                        -Dlibidn=false \
-                       -Dlibidn2=false \
+                       -Dlibidn2=true \
                        -Dlibiptc=false \
                        -Dqrencode=false \
                        -Dgcrypt=false \
                        -Dgnutls=false \
+                       -Dopenssl=false \
                        -Delfutils=false \
                        -Dzlib=false \
                        -Dbzip2=false \
                        -Dxz=false \
                        -Dlz4=false \
                        -Dxkbcommon=false \
+                       -Dpcre2=false \
                        -Dglib=false \
                        -Ddbus=false \
                        -Ddefault-dnssec=no \
@@ -60,7 +62,6 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dnetworkd=false \
                        -Dtimedated=false \
                        -Dtimesyncd=true \
-                       -Dmyhostname=false \
                        -Dfirstboot=false \
                        -Drandomseed=false \
                        -Dbacklight=false \
@@ -77,18 +78,22 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dsmack=false \
                        -Dgshadow=false \
                        -Didn=false \
+                       -Dnss-myhostname=false \
+                       -Dnss-mymachines=false \
+                       -Dnss-resolve=false \
                        -Dnss-systemd=false \
                        -Dman=false \
                        -Dhtml=false \
                        -Dbashcompletiondir=no \
                        -Dzshcompletiondir=no \
-                       -Dkill-path=/usr/bin/kill \
                        -Dkmod-path=/usr/bin/kmod \
                        -Dmount-path=/usr/bin/mount \
-                       -Dumount-path=/usr/bin/umount"
+                       -Dumount-path=/usr/bin/umount \
+                       -Ddebug-tty=$DEBUG_TTY \
+                       -Dversion-tag=${PKG_VERSION}"
 
 pre_configure_target() {
-  export CFLAGS="$CFLAGS -fno-schedule-insns -fno-schedule-insns2 -Wno-format-truncation"
+  export TARGET_CFLAGS="$TARGET_CFLAGS -fno-schedule-insns -fno-schedule-insns2 -Wno-format-truncation"
   export LC_ALL=en_US.UTF-8
 }
 
@@ -124,9 +129,6 @@ post_makeinstall_target() {
   safe_remove $INSTALL/usr/lib/udev/rules.d/71-seat.rules
   safe_remove $INSTALL/usr/lib/udev/rules.d/73-seat-late.rules
 
-  # remove debug-shell.service, we install our own
-  safe_remove $INSTALL/usr/lib/systemd/system/debug-shell.service
-
   # remove getty units, we dont want a console
   safe_remove $INSTALL/usr/lib/systemd/system/autovt@.service
   safe_remove $INSTALL/usr/lib/systemd/system/console-getty.service
@@ -154,8 +156,19 @@ post_makeinstall_target() {
   safe_remove $INSTALL/usr/bin/systemd-nspawn
   safe_remove $INSTALL/usr/lib/systemd/system/systemd-nspawn@.service
 
-  # remove genetators/catalog
-  safe_remove $INSTALL/usr/lib/systemd/system-generators
+  # remove unneeded generators
+  for gen in $INSTALL/usr/lib/systemd/system-generators/*; do
+    case "$gen" in
+      */systemd-debug-generator)
+        # keep it
+        ;;
+      *)
+        safe_remove "$gen"
+        ;;
+    esac
+  done
+
+  # remove catalog
   safe_remove $INSTALL/usr/lib/systemd/catalog
 
   # remove partition
