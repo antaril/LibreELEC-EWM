@@ -29,8 +29,6 @@ OEM_EMU_COMMON=" \
   lr-genplus \
   lr-mame2003-plus \
   lr-mrboom \
-  lr-mupen64plus \
-  lr-mupen64plus-nx \
   lr-nestopia \
   lr-pcsx-rearmed \
   lr-prboom \
@@ -48,7 +46,9 @@ OEM_EMU_GENERIC=" \
   lr-mame2016 \
   lr-mesen \
   lr-parallel-n64 \
-  lr-ppsspp"
+  lr-ppsspp\
+  lr-mupen64plus\
+  lr-mupen64plus-nx"
 
 OEM_EMU_RPI=" \
   lr-mame2010 \
@@ -61,7 +61,9 @@ OEM_EMU_ROCKCHIP=" \
   lr-mame2010 \
   lr-snes9x2010 \
   lr-vice \
-  lr-yabause"
+  lr-yabause\
+  lr-mupen64plus\
+  lr-mupen64plus-nx"
 
 
 if [ "$OEM_EMU" = "yes" ]; then
