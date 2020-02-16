@@ -6,12 +6,11 @@ PKG_NAME="linux"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.kernel.org"
 PKG_DEPENDS_HOST="ccache:host rsync:host openssl:host"
-PKG_DEPENDS_TARGET="toolchain linux:host cpio:host kmod:host xz:host wireless-regdb keyutils $KERNEL_EXTRA_DEPENDS_TARGET"
-PKG_DEPENDS_INIT="toolchain"
-PKG_NEED_UNPACK="$LINUX_DEPENDS $(get_pkg_directory busybox)"
+PKG_DEPENDS_TARGET="toolchain linux:host cpio:host kmod:host xz:host keyutils $KERNEL_EXTRA_DEPENDS_TARGET"
+PKG_NEED_UNPACK="$LINUX_DEPENDS $(get_pkg_directory initramfs) $(get_pkg_variable initramfs PKG_NEED_UNPACK)"
 PKG_LONGDESC="This package contains a precompiled kernel image and the modules."
 PKG_IS_KERNEL_PKG="yes"
-PKG_STAMP="$KERNEL_TARGET $KERNEL_MAKE_EXTRACMD"
+PKG_STAMP="$LINUX $KERNEL_TARGET $KERNEL_MAKE_EXTRACMD"
 
 PKG_PATCH_DIRS="$LINUX"
 
@@ -23,22 +22,21 @@ case "$LINUX" in
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     PKG_PATCH_DIRS="amlogic"
     ;;
-  rockchip-4.4)
-    PKG_VERSION="aa8bacf821e5c8ae6dd8cae8d64011c741659945"
-    PKG_SHA256="a2760fe89a15aa7be142fd25fb08ebd357c5d855c41f1612cf47c6e89de39bb3"
-    PKG_URL="https://github.com/rockchip-linux/kernel/archive/$PKG_VERSION.tar.gz"
-    PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
-    PKG_BUILD_PERF="no"
-    ;;
   raspberrypi)
-    PKG_VERSION="e24f334452d6b2f123e5e277102eba1a52d28cee" # 5.3.0
-    PKG_SHA256="88ba63f4ae5ca4e47175cfe5d988b005343a2ef3854d45c1e23241b9fb9af7ff"
+    PKG_VERSION="15c1f939b948d51862dd6f75a69921ba0d867228" # 5.5.0
+    PKG_SHA256="8e072094cbf85c4b1157ef3c180e906cb1f85cee993c3016800fd51b4c382f54"
     PKG_URL="https://github.com/raspberrypi/linux/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     ;;
+  next)
+    PKG_VERSION="next-20200130"
+    PKG_SHA256="89840abaf402dcac3146fd78bb73e0b1e76afeeb3353179f43ce87f293d2fc7e"
+    PKG_URL="https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/snapshot/linux-next-$PKG_VERSION.tar.gz"
+    PKG_SOURCE_NAME="linux-$PKG_VERSION.tar.gz"
+    ;;
   *)
-    PKG_VERSION="5.3"
-    PKG_SHA256="78f3c397513cf4ff0f96aa7d09a921d003e08fa97c09e0bb71d88211b40567b2"
+    PKG_VERSION="5.5"
+    PKG_SHA256="a6fbd4ee903c128367892c2393ee0d9657b6ed3ea90016d4dc6f1f6da20b2330"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v5.x/$PKG_NAME-$PKG_VERSION.tar.xz"
     PKG_PATCH_DIRS="default"
     ;;
@@ -64,6 +62,13 @@ fi
 if [[ "$KERNEL_TARGET" = uImage* ]]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET u-boot-tools:host"
 fi
+
+# Ensure that the dependencies of initramfs:target are built correctly, but
+# we don't want to add initramfs:target as a direct dependency as we install
+# this "manually" from within linux:target
+for pkg in $(get_pkg_variable initramfs PKG_DEPENDS_TARGET); do
+  ! listcontains "${PKG_DEPENDS_TARGET}" "${pkg}" && PKG_DEPENDS_TARGET+=" ${pkg}" || true
+done
 
 post_patch() {
   cp $PKG_KERNEL_CFG_FILE $PKG_BUILD/.config
@@ -132,6 +137,7 @@ makeinstall_host() {
 pre_make_target() {
   ( cd $ROOT
     rm -rf $BUILD/initramfs
+    rm -f ${STAMPS_INSTALL}/initramfs/install_target ${STAMPS_INSTALL}/*/install_init
     $SCRIPTS/install initramfs
   )
   pkg_lock_status "ACTIVE" "linux:target" "build"
@@ -147,12 +153,8 @@ pre_make_target() {
     sed -i "s|CONFIG_EXTRA_FIRMWARE=.*|CONFIG_EXTRA_FIRMWARE=\"${FW_LIST}\"|" $PKG_BUILD/.config
   fi
 
-  kernel_make oldconfig
-
-  # regdb (backward compatability with pre-4.15 kernels)
-  if grep -q ^CONFIG_CFG80211_INTERNAL_REGDB= $PKG_BUILD/.config ; then
-    cp $(get_build_dir wireless-regdb)/db.txt $PKG_BUILD/net/wireless/db.txt
-  fi
+  kernel_make olddefconfig
+  kernel_make savedefconfig
 }
 
 make_target() {
@@ -232,6 +234,9 @@ make_target() {
 }
 
 makeinstall_target() {
+  mkdir -p $INSTALL/.image
+  cp -p arch/${TARGET_KERNEL_ARCH}/boot/${KERNEL_TARGET} System.map $INSTALL/.image/
+
   kernel_make INSTALL_MOD_PATH=$INSTALL/$(get_kernel_overlay_dir) modules_install
   rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/build
   rm -f $INSTALL/$(get_kernel_overlay_dir)/lib/modules/*/source
@@ -257,13 +262,4 @@ makeinstall_target() {
     done
     cp -p arch/$TARGET_KERNEL_ARCH/boot/dts/overlays/README $INSTALL/usr/share/bootloader/overlays
   fi
-}
-
-post_install() {
-  mkdir -p $INSTALL/$(get_full_firmware_dir)/
-
-  # regdb and signature is now loaded as firmware by 4.15+
-    if grep -q ^CONFIG_CFG80211_REQUIRE_SIGNED_REGDB= $PKG_BUILD/.config; then
-      cp $(get_build_dir wireless-regdb)/regulatory.db{,.p7s} $INSTALL/$(get_full_firmware_dir)
-    fi
 }
