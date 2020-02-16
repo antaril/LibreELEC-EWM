@@ -2,8 +2,8 @@
 # Copyright (C) 0riginally created by Escalade (https://github.com/escalade)
 # Copyright (C) 2018-present 5schatten (https://github.com/5schatten)
 
-PKG_NAME="retroarch"
-PKG_VERSION="3677170ca3ff85ee49863f68686af1b2e33cc531" #1.7.6
+KG_NAME="retroarch"
+PKG_VERSION="9e25601a56041831f3b2cd6668aa63ec6809a0c3" #1.8.4
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/libretro/RetroArch"
 PKG_URL="https://github.com/libretro/RetroArch.git"
