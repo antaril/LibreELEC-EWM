@@ -23,22 +23,15 @@ case "$LINUX" in
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     PKG_PATCH_DIRS="amlogic"
     ;;
-  rockchip-4.4)
-    PKG_VERSION="aa8bacf821e5c8ae6dd8cae8d64011c741659945"
-    PKG_SHA256="a2760fe89a15aa7be142fd25fb08ebd357c5d855c41f1612cf47c6e89de39bb3"
-    PKG_URL="https://github.com/rockchip-linux/kernel/archive/$PKG_VERSION.tar.gz"
-    PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
-    PKG_BUILD_PERF="no"
-    ;;
   raspberrypi)
-    PKG_VERSION="e24f334452d6b2f123e5e277102eba1a52d28cee" # 5.3.0
-    PKG_SHA256="88ba63f4ae5ca4e47175cfe5d988b005343a2ef3854d45c1e23241b9fb9af7ff"
+    PKG_VERSION="d09e02c0ed86330168714b027c1669a80728d699" # 5.4.0
+    PKG_SHA256="fae85fb4e995e190900b6719fb013568295e9154628847120983beb1fd8491b0"
     PKG_URL="https://github.com/raspberrypi/linux/archive/$PKG_VERSION.tar.gz"
     PKG_SOURCE_NAME="linux-$LINUX-$PKG_VERSION.tar.gz"
     ;;
   *)
-    PKG_VERSION="5.3"
-    PKG_SHA256="78f3c397513cf4ff0f96aa7d09a921d003e08fa97c09e0bb71d88211b40567b2"
+    PKG_VERSION="5.4"
+    PKG_SHA256="bf338980b1670bca287f9994b7441c2361907635879169c64ae78364efc5f491"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v5.x/$PKG_NAME-$PKG_VERSION.tar.xz"
     PKG_PATCH_DIRS="default"
     ;;

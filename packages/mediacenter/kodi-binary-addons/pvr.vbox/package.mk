@@ -3,9 +3,9 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pvr.vbox"
-PKG_VERSION="4.4.8-Leia"
-PKG_SHA256="7063ee14c222ed797ce6dddca3908d2558ee94b3a2a29fed68bde4ff8f55cd19"
-PKG_REV="4"
+PKG_VERSION="5.5.1-Matrix"
+PKG_SHA256="bcb399c849d294371970d1eafdf4d273e6a63367a012f46be767212dbe7e4bd9"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/kodi-pvr/pvr.vbox"

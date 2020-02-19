@@ -9,7 +9,7 @@ import xbmcaddon
 import subprocess
 from xml.dom.minidom import parse
 
-sys.path.append('/usr/share/kodi/addons/service.libreelec.settings')
+sys.path.append('/usr/share/kodi/addons/@DISTRO_PKG_SETTINGS_ID@')
 
 import oe
 
@@ -47,8 +47,8 @@ def startchrome(args):
     chrome_params = args + ' ' + \
                     __addon__.getSetting('HOMEPAGE')
     subprocess.call(__path__ + 'chrome-start ' + chrome_params, shell=True, env=new_env)
-  except Exception, e:
-    oe.dbg_log('chrome', unicode(e))
+  except Exception as e:
+    oe.dbg_log('chrome', e)
 
 def isRuning(pname):
   tmp = os.popen("ps -Af").read()

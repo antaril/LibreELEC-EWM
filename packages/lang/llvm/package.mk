@@ -3,17 +3,18 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="llvm"
-PKG_VERSION="8.0.1"
-PKG_SHA256="44787a6d02f7140f145e2250d56c9f849334e11f9ae379827510ed72f12b75e7"
+PKG_VERSION="9.0.0"
+PKG_SHA256="d6a0565cf21f22e9b4353b2eb92622e8365000a9e90a16b09b56f8157eabfe84"
 PKG_ARCH="x86_64"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="http://llvm.org/"
-PKG_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${PKG_VERSION}/llvm-${PKG_VERSION}.src.tar.xz"
-PKG_DEPENDS_HOST="toolchain"
+PKG_URL="https://releases.llvm.org/${PKG_VERSION}/llvm-${PKG_VERSION}.src.tar.xz"
+PKG_DEPENDS_HOST="toolchain:host"
 PKG_DEPENDS_TARGET="toolchain llvm:host zlib"
 PKG_LONGDESC="Low-Level Virtual Machine (LLVM) is a compiler infrastructure."
 
-PKG_CMAKE_OPTS_COMMON="-DLLVM_INCLUDE_TOOLS=ON \
+PKG_CMAKE_OPTS_COMMON="-DCMAKE_BUILD_TYPE=MinSizeRel \
+                       -DLLVM_INCLUDE_TOOLS=ON \
                        -DLLVM_BUILD_TOOLS=OFF \
                        -DLLVM_BUILD_UTILS=OFF \
                        -DLLVM_BUILD_EXAMPLES=OFF \
@@ -21,10 +22,13 @@ PKG_CMAKE_OPTS_COMMON="-DLLVM_INCLUDE_TOOLS=ON \
                        -DLLVM_BUILD_TESTS=OFF \
                        -DLLVM_INCLUDE_TESTS=OFF \
                        -DLLVM_INCLUDE_GO_TESTS=OFF \
+                       -DLLVM_BUILD_BENCHMARKS=OFF \
                        -DLLVM_BUILD_DOCS=OFF \
                        -DLLVM_INCLUDE_DOCS=OFF \
                        -DLLVM_ENABLE_DOXYGEN=OFF \
                        -DLLVM_ENABLE_SPHINX=OFF \
+                       -DLLVM_ENABLE_OCAMLDOC=OFF \
+                       -DLLVM_ENABLE_BINDINGS=OFF \
                        -DLLVM_TARGETS_TO_BUILD="AMDGPU" \
                        -DLLVM_ENABLE_TERMINFO=OFF \
                        -DLLVM_ENABLE_ASSERTIONS=OFF \
@@ -34,14 +38,17 @@ PKG_CMAKE_OPTS_COMMON="-DLLVM_INCLUDE_TOOLS=ON \
                        -DLLVM_LINK_LLVM_DYLIB=ON \
                        -DLLVM_OPTIMIZED_TABLEGEN=ON \
                        -DLLVM_APPEND_VC_REV=OFF \
-                       -DLLVM_ENABLE_RTTI=ON"
+                       -DLLVM_ENABLE_RTTI=ON \
+                       -DLLVM_ENABLE_UNWIND_TABLES=OFF \
+                       -DLLVM_ENABLE_Z3_SOLVER=OFF"
 
-PKG_CMAKE_OPTS_HOST="$PKG_CMAKE_OPTS_COMMON \
-                     -DCMAKE_INSTALL_RPATH=$TOOLCHAIN/lib"
+pre_configure_host() {
+  CXXFLAGS+=" -DLLVM_CONFIG_EXEC_PREFIX=\\\"$SYSROOT_PREFIX/usr\\\""
+  PKG_CMAKE_OPTS_HOST="$PKG_CMAKE_OPTS_COMMON"
+}
 
 pre_configure_target() {
   PKG_CMAKE_OPTS_TARGET="$PKG_CMAKE_OPTS_COMMON \
-                         -DCMAKE_BUILD_TYPE=MinSizeRel \
                          -DCMAKE_C_FLAGS="$CFLAGS" \
                          -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
                          -DLLVM_TARGET_ARCH="$TARGET_ARCH" \
@@ -53,7 +60,8 @@ make_host() {
 }
 
 makeinstall_host() {
-  cp -a bin/llvm-config $SYSROOT_PREFIX/usr/bin/llvm-config-host
+  cp -a lib/libLLVM-*.so $TOOLCHAIN/lib
+  cp -a bin/llvm-config $TOOLCHAIN/bin/llvm-config-host
   cp -a bin/llvm-tblgen $TOOLCHAIN/bin
 }
 

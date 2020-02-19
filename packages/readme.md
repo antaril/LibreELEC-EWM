@@ -33,7 +33,7 @@ To control the build behaviour of your package, use variables in the top-down or
 | PKG_NEED_UNPACK | -   | no  | Space separated list of files or folders to include in package stamp calculation. If the stamp is invalidated through changes to package files or dependent files/folders the package is cleaned and rebuilt. e.g. `PKG_NEED_UNPACK="$(get_pkg_directory linux)"` will trigger clean/rebuild of a Linux kernel driver package when a change to the `linux` kernel package is detected. |
 | PKG_TOOLCHAIN | auto  | no  | Control which build toolchain is used. For detailed information, see [reference](#toolchain-options). |
 | PKG_BUILD_FLAGS | -   | no  | A space separated list of flags with which to fine-tune the build process. Flags can be enabled or disabled with a `+` or `-` prefix. For detailed information, see the [Reference](#build_flags-options). |
-| PKG_PYTHON_VERSION | python2.7 | no | Define the Python version to be used. |
+| PKG_PYTHON_VERSION | python3.7 | no | Define the Python version to be used. |
 | PKG_IS_KERNEL_PKG | - | no  | Set to `yes` for packages that include Linux kernel modules |
 
 #### Meson Options
@@ -154,6 +154,7 @@ Full list of overwrittable functions.
 | make_\[stage]<br>pre_make_\[stage]<br>post_make_\[stage] | yes | Build of the package |
 | makeinstall_\[stage]<br>pre_makeinstall_\[stage]<br>post_makeinstall_\[stage] | yes | Installation of the files in the correct pathes<br>host: TOOLCHAIN<br>target: SYSROOT and IMAGE<br>bootstrap and init: temporary destination
 | addon                   | -      | Copy all files together for addon creation. This is requiered for addons |
+| post_install_addon      | -      | Post processing of installed addon files in `${INSTALL}` directory |
 
 ## Late Binding variable assignment
 

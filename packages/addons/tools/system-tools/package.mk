@@ -3,7 +3,7 @@
 
 PKG_NAME="system-tools"
 PKG_VERSION="1.0"
-PKG_REV="111"
+PKG_REV="112"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://libreelec.tv"
@@ -141,10 +141,10 @@ addon() {
     cp -P $(get_build_dir nmon)/nmon $ADDON_BUILD/$PKG_ADDON_ID/bin/
 
     # p7zip
-    cp -P $(get_build_dir p7zip)/bin/7z.so $ADDON_BUILD/$PKG_ADDON_ID/bin
-    cp -PR $(get_build_dir p7zip)/bin/Codecs $ADDON_BUILD/$PKG_ADDON_ID/bin
-    cp -P $(get_build_dir p7zip)/bin/7z $ADDON_BUILD/$PKG_ADDON_ID/bin
-    cp -P $(get_build_dir p7zip)/bin/7za $ADDON_BUILD/$PKG_ADDON_ID/bin
+    cp -P $(get_build_dir p7zip)/.$TARGET_NAME/bin/7z.so $ADDON_BUILD/$PKG_ADDON_ID/bin
+    cp -PR $(get_build_dir p7zip)/.$TARGET_NAME/bin/Codecs $ADDON_BUILD/$PKG_ADDON_ID/bin
+    cp -P $(get_build_dir p7zip)/.$TARGET_NAME/bin/7z $ADDON_BUILD/$PKG_ADDON_ID/bin
+    cp -P $(get_build_dir p7zip)/.$TARGET_NAME/bin/7za $ADDON_BUILD/$PKG_ADDON_ID/bin
 
     # patch
     cp -P $(get_build_dir patch)/.$TARGET_NAME/src/patch $ADDON_BUILD/$PKG_ADDON_ID/bin
@@ -172,4 +172,5 @@ addon() {
 
     # vim
     cp -P $(get_build_dir vim)/.install_pkg/usr/bin/vim $ADDON_BUILD/$PKG_ADDON_ID/bin
+    cp -Pa $(get_build_dir vim)/.install_pkg/storage/.kodi/addons/virtual.system-tools/data/vim/ $ADDON_BUILD/$PKG_ADDON_ID/data
 }

@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="systemd"
-PKG_VERSION="243"
-PKG_SHA256="0611843c2407f8b125b1b7cb93533bdebd4ccf91c99dffa64ec61556a258c7d1"
+PKG_VERSION="244"
+PKG_SHA256="2207ceece44108a04bdd5459aa74413d765a829848109da6f5f836c25aa393aa"
 PKG_LICENSE="LGPL2.1+"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
 PKG_URL="https://github.com/systemd/systemd/archive/v$PKG_VERSION.tar.gz"
@@ -49,7 +49,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Ddefault-dnssec=no \
                        -Dimportd=false \
                        -Dremote=false \
-                       -Dutmp=false \
+                       -Dutmp=true \
                        -Dhibernate=false \
                        -Denvironment-d=false \
                        -Dbinfmt=false \
@@ -206,8 +206,17 @@ post_makeinstall_target() {
   cp $PKG_DIR/scripts/userconfig-setup $INSTALL/usr/bin
   cp $PKG_DIR/scripts/usercache-setup $INSTALL/usr/bin
 
+  # use systemd to set cpufreq governor and tunables
+  find_file_path scripts/cpufreq && cp -PRv $FOUND_PATH $INSTALL/usr/bin
+
   mkdir -p $INSTALL/usr/sbin
   cp $PKG_DIR/scripts/kernel-overlays-setup $INSTALL/usr/sbin
+  cp $PKG_DIR/scripts/network-base-setup $INSTALL/usr/sbin
+  cp $PKG_DIR/scripts/systemd-timesyncd-setup $INSTALL/usr/sbin
+
+  # /etc/resolv.conf and /etc/hosts must be writable
+  ln -sf /run/libreelec/resolv.conf $INSTALL/etc/resolv.conf
+  ln -sf /run/libreelec/hosts $INSTALL/etc/hosts
 
   # provide 'halt', 'shutdown', 'reboot' & co.
   ln -sf /usr/bin/systemctl $INSTALL/usr/sbin/halt
@@ -230,6 +239,7 @@ post_makeinstall_target() {
   ln -sf /storage/.config/logind.conf.d $INSTALL/etc/systemd/logind.conf.d
   safe_remove $INSTALL/etc/systemd/sleep.conf.d
   ln -sf /storage/.config/sleep.conf.d $INSTALL/etc/systemd/sleep.conf.d
+  ln -sf /storage/.config/timesyncd.conf.d $INSTALL/etc/systemd/timesyncd.conf.d
   safe_remove $INSTALL/etc/sysctl.d
   ln -sf /storage/.config/sysctl.d $INSTALL/etc/sysctl.d
   safe_remove $INSTALL/etc/tmpfiles.d
@@ -268,4 +278,8 @@ post_install() {
   enable_service usercache.service
   enable_service kernel-overlays.service
   enable_service hwdb.service
+  enable_service cpufreq.service
+  enable_service network-base.service
+  enable_service systemd-timesyncd.service
+  enable_service systemd-timesyncd-setup.service
 }
